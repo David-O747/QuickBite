@@ -1,4 +1,3 @@
-// MI 4: success banner (login/register)
 function SuccessBanner({ messageText, isVisible }) {
   return (
     <div

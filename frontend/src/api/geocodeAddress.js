@@ -1,6 +1,3 @@
-// free geocoding via OpenStreetMap Nominatim — no API key needed
-// turns address or postcode into lat/lng
-
 export async function geocodeAddress(addressText) {
   const query = addressText.trim()
   if (!query) return null

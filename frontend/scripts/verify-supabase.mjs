@@ -1,9 +1,4 @@
 #!/usr/bin/env node
-/**
- * Verifies Supabase connection and study tables.
- * Usage: cd frontend && node scripts/verify-supabase.mjs
- * Loads VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY from frontend/.env
- */
 
 import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'

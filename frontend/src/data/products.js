@@ -1,6 +1,5 @@
 import { getPhotoByCategoryIndex } from './foodImages'
 
-// each product has its own photo (even within the same category)
 const productData = [
   {
     productId: 'p1',

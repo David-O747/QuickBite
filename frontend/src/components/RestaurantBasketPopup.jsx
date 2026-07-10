@@ -4,7 +4,6 @@ import { getRestaurantFromStorage, saveRestaurantToStorage } from '../data/resta
 import CtaButton from './CtaButton'
 import PopupIcon from './studyPopups/PopupIcon'
 
-// shown when user tries to order from a second restaurant
 function RestaurantBasketPopup({
   isOpen,
   newRestaurantName = '',

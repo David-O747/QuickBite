@@ -19,7 +19,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* homepage section skin — static only, no extra motion */
 .home-dot-band {
   background-color: #fafafa;
   background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
@@ -55,10 +54,6 @@ body {
   opacity: 0.045;
 }
 
-/* ========== SITE B MICRO-INTERACTIONS ONLY ========== */
-/* Site A: body.site-a disables all of these via overrides below */
-
-/* 1. Click confirmation — scale 0.95 + darken, 150ms */
 .mi-cta {
   background-color: var(--brand-primary);
   color: #fff;
@@ -73,7 +68,6 @@ body {
     box-shadow 200ms ease;
 }
 
-/* Stronger hover so Site B feedback is obvious during the study */
 .mi-on .mi-cta:hover {
   transform: scale(1.04);
   background-color: var(--brand-primary-light) !important;
@@ -86,14 +80,12 @@ body {
   box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
 }
 
-/* Site A: no hover/active motion */
 .mi-off .mi-cta:hover,
 .mi-off .mi-cta:active {
   transform: none;
   background-color: var(--brand-primary);
 }
 
-/* 3. Loading spinner — simple only */
 .mi-spinner {
   width: 32px;
   height: 32px;
@@ -110,7 +102,6 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* 4. Success banner fade-in */
 .mi-success-banner {
   opacity: 0;
 }
@@ -124,7 +115,6 @@ body {
   opacity: 1;
 }
 
-/* 5. Item added — text fade + basket pulse */
 .mi-added-label {
   opacity: 0;
 }
@@ -153,7 +143,6 @@ body {
   100% { transform: scale(1); }
 }
 
-/* 6. Checkout progress */
 .mi-step-dot {
   width: 28px;
   height: 28px;
@@ -195,7 +184,6 @@ body {
   background: var(--brand-primary);
 }
 
-/* 7. Active state border on form fields */
 .mi-field {
   border: 2px solid var(--field-neutral);
   outline: none;
@@ -221,7 +209,6 @@ body {
   border-color: var(--field-invalid);
 }
 
-/* 9. Password strength tick */
 .mi-req-tick {
   display: inline-block;
   width: 14px;
@@ -231,7 +218,6 @@ body {
   transition: opacity 150ms ease, color 150ms ease;
 }
 
-/* 10. Basket success inline message */
 .mi-basket-msg {
   opacity: 0;
   pointer-events: none;
@@ -246,7 +232,6 @@ body {
   opacity: 1;
 }
 
-/* order confirmation checkmark */
 .mi-check-icon {
   opacity: 0;
 }
@@ -260,7 +245,6 @@ body {
   opacity: 1;
 }
 
-/* Post-order research feedback — identical on Site A and B, no motion */
 .study-feedback-modal,
 .study-feedback-modal * {
   transition: none !important;

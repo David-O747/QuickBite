@@ -53,11 +53,9 @@ function RestaurantMenuPage() {
     setIsLoading(true)
     const timer = setTimeout(() => setIsLoading(false), 250)
     return () => clearTimeout(timer)
-    // Task boundaries are per restaurant menu view — not on every app context update.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId])
 
-  // popup when user opens a different restaurant while basket is active
   useEffect(() => {
     if (!restaurant) return
     if (
@@ -174,7 +172,6 @@ function RestaurantMenuPage() {
         onClearedBasket={handlePopupCleared}
       />
 
-      {/* back link + breadcrumb */}
       <div className="border-b border-gray-100 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <button
@@ -196,7 +193,6 @@ function RestaurantMenuPage() {
         </div>
       </div>
 
-      {/* restaurant-specific nav strip */}
       <div className="border-b border-gray-100 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center gap-3">
           <nav className="flex items-center gap-5 text-sm">
@@ -219,7 +215,6 @@ function RestaurantMenuPage() {
         <LoadingSpinner />
       ) : (
         <>
-          {/* hero */}
           <section
             className="relative bg-cover bg-center text-white"
             style={{ backgroundImage: `url(${restaurant.imagePath})` }}
@@ -246,7 +241,6 @@ function RestaurantMenuPage() {
             </div>
           </section>
 
-          {/* section tabs */}
           <div className="sticky top-[73px] z-10 bg-white border-b border-gray-100">
             <div className="max-w-6xl mx-auto px-4 py-3 flex gap-5 overflow-x-auto text-sm">
               {menuSections.map((section) => (
@@ -267,7 +261,6 @@ function RestaurantMenuPage() {
           </div>
 
           <main className="max-w-6xl mx-auto px-4 py-10 space-y-12 pb-10">
-            {/* popular */}
             <section id="menu-popular">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-2xl font-bold">Popular Items</h2>
@@ -326,7 +319,6 @@ function RestaurantMenuPage() {
               </div>
             </section>
 
-            {/* mains */}
             <section id="menu-mains">
               <h2 className="text-2xl font-bold mb-5">Main Courses</h2>
               <div className="grid lg:grid-cols-3 gap-4">
@@ -402,7 +394,6 @@ function RestaurantMenuPage() {
               </div>
             </section>
 
-            {/* sides */}
             <section id="menu-sides">
               <h2 className="text-2xl font-bold mb-5">Sides</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -429,7 +420,6 @@ function RestaurantMenuPage() {
               </div>
             </section>
 
-            {/* beverages */}
             <section id="menu-beverages">
               <h2 className="text-2xl font-bold mb-5">Beverages</h2>
               <div className="grid sm:grid-cols-3 gap-4">
@@ -456,7 +446,6 @@ function RestaurantMenuPage() {
               </div>
             </section>
 
-            {/* desserts */}
             <section id="menu-desserts">
               <h2 className="text-2xl font-bold mb-5">Desserts</h2>
               <div className="grid sm:grid-cols-2 gap-4">

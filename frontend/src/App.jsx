@@ -22,8 +22,6 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import CookiePolicyPage from './pages/CookiePolicyPage'
 import RestaurantMenuPage from './pages/RestaurantMenuPage'
 
-// Site B = true (micro-interactions on)
-// Site A = false (identical UI, effects off)
 const MICRO_INTERACTIONS_ENABLED =
   import.meta.env.VITE_SITE_VERSION !== 'A'
 

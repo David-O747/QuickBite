@@ -17,14 +17,12 @@ export function validateRequired(value, fieldLabel) {
 
 export function validatePostcode(value) {
   if (!value.trim()) return 'Postcode is required'
-  // simple UK-style check for study forms
   if (value.trim().length < 5) return 'Enter a valid postcode'
   return ''
 }
 
 export function validateCardNumber(value) {
   if (!value.trim()) return 'Card number is required'
-  // Demo checkout accepts common test lengths to reduce local-study friction
   const digitsOnly = value.replace(/\s/g, '')
   if (!/^\d{8,19}$/.test(digitsOnly)) return 'Enter a valid card number (8-19 digits)'
   return ''

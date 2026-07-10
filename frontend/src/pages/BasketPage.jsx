@@ -86,7 +86,6 @@ function BasketPage() {
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-8 items-start">
-            {/* item list */}
             <div className="lg:col-span-2 space-y-4">
               {app.basketItems.map((item) => (
                 <article
@@ -137,7 +136,6 @@ function BasketPage() {
 
             </div>
 
-            {/* order summary sidebar */}
             <aside className="space-y-4">
               <div className="rounded-2xl bg-gray-50 border border-gray-100 p-6">
                 <div className="flex items-center justify-between gap-3 mb-4">

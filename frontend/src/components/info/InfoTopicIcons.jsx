@@ -1,5 +1,3 @@
-// topic-matched SVG icons for info/legal pages — QuickBite red style, no photos
-
 const iconProps = {
   width: 32,
   height: 32,

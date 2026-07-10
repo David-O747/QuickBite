@@ -1,6 +1,5 @@
 import { getPhotoByCategoryIndex } from './foodImages'
 
-// menu templates by restaurant type — each restaurant gets a unique mix
 const menuTemplates = {
   Pizza: {
     description:
@@ -288,7 +287,6 @@ export function getRestaurantFromStorage(restaurantId) {
     const saved = JSON.parse(sessionStorage.getItem('qb_selected_restaurant') || 'null')
     if (saved && saved.restaurantId === restaurantId) return saved
   } catch {
-    // ignore
   }
   return null
 }

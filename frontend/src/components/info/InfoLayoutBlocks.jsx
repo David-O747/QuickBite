@@ -1,6 +1,5 @@
 import { InfoIconBadge } from './InfoTopicIcons'
 
-// policy/topic card with icon — opens popup on click
 export function InfoTopicCard({ iconKey, title, summary, actionLabel, onOpen, tone = 'red', featured = false }) {
   return (
     <button
@@ -22,7 +21,6 @@ export function InfoTopicCard({ iconKey, title, summary, actionLabel, onOpen, to
   )
 }
 
-// contact / careers channel block
 export function InfoChannelCard({ iconKey, title, body, meta, tone = 'red' }) {
   return (
     <article className="rounded-2xl border border-gray-100 bg-white shadow-md p-6 relative overflow-hidden">
@@ -35,7 +33,6 @@ export function InfoChannelCard({ iconKey, title, body, meta, tone = 'red' }) {
   )
 }
 
-// numbered legal section
 export function InfoNumberedBlock({ stepNumber, iconKey, title, body }) {
   return (
     <article className="grid md:grid-cols-[auto_1fr] gap-5 rounded-2xl border border-gray-100 bg-white shadow-md p-6 md:p-8">

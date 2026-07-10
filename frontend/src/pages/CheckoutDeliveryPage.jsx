@@ -79,7 +79,6 @@ function CheckoutDeliveryPage() {
     [app.basketTotal, promoCode]
   )
 
-  // Keep shoppers on checkout while placing order — clearing the basket must not bounce back to /basket
   useEffect(() => {
     if (isPlacingOrder.current) return
     if (app.basketItems.length === 0) navigate('/basket')

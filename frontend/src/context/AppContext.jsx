@@ -38,7 +38,6 @@ export function AppProvider({ children }) {
     localStorage.setItem(ADDRESS_KEY, address)
   }
 
-  // study params from URL — set by researcher, not shown as tracking UI
   const studyParams = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
     return {
@@ -70,7 +69,6 @@ export function AppProvider({ children }) {
     localStorage.removeItem(AUTH_KEY)
   }
 
-  // one restaurant per order — blocks mixing items from different places
   function addToBasket(product) {
     const { restaurantId, restaurantName } = product
 

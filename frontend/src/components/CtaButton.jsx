@@ -2,7 +2,6 @@ import { useApp } from '../context/AppContext'
 import { useMicroInteractions } from '../context/MicroInteractionsContext'
 import { getStudyMeta, logCtaClick, markHoverStart, clearHoverStart } from '../tracking/trackingService'
 
-// MI 1 + 2: click confirmation and hover — CSS only when mi enabled
 function CtaButton({
   ctaButtonId,
   children,
