@@ -48,13 +48,17 @@ function RestaurantMenuPage() {
     [restaurant]
   )
 
+  const studyMeta = useMemo(
+    () => getStudyMeta(app),
+    [app.participantId, app.ageGroup, app.sessionId]
+  )
+
   useEffect(() => {
-    endTaskTimer('locate_product', getStudyMeta(app))
+    endTaskTimer('locate_product', studyMeta)
     setIsLoading(true)
     const timer = setTimeout(() => setIsLoading(false), 250)
     return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurantId])
+  }, [restaurantId, studyMeta])
 
   useEffect(() => {
     if (!restaurant) return

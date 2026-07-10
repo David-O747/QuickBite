@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { foodCategories, localPhotos, restaurantList as defaultRestaurants } from '../data/homeContent'
@@ -30,19 +30,19 @@ function HomePage() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSearchingNearby, setIsSearchingNearby] = useState(false)
-  const [heroAddress, setHeroAddress] = useState(app.deliveryAddress || '')
+  const [heroAddress, setHeroAddress] = useState(
+    () => (app.isLoggedIn ? app.deliveryAddress : '') || ''
+  )
   const [searchStatus, setSearchStatus] = useState('')
   const [nearbyRestaurants, setNearbyRestaurants] = useState(defaultRestaurants)
   const [activeCategory, setActiveCategory] = useState(null)
-  const [favoriteIds, setFavoriteIds] = useState(() => {
-    try {
-      return new Set(JSON.parse(localStorage.getItem('qb_favorites') || '[]'))
-    } catch {
-      return new Set()
-    }
-  })
+  const favoriteIds = useMemo(
+    () => new Set(app.favoriteRestaurantIds),
+    [app.favoriteRestaurantIds]
+  )
   const [pendingRestaurant, setPendingRestaurant] = useState(null)
   const [showBasketPopup, setShowBasketPopup] = useState(false)
+  const [heroVideoFailed, setHeroVideoFailed] = useState(false)
 
   useEffect(() => {
     startTaskTimer('locate_product')
@@ -51,16 +51,16 @@ function HomePage() {
   }, [])
 
   useEffect(() => {
-    const nearQuery = searchParams.get('near')
-    if (nearQuery) {
-      setHeroAddress(nearQuery)
-      searchNearbyRestaurants(nearQuery)
-      setSearchParams({}, { replace: true })
+    if (!app.isLoggedIn) {
+      setHeroAddress('')
+      return
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (app.deliveryAddress) {
+      setHeroAddress(app.deliveryAddress)
+    }
+  }, [app.isLoggedIn, app.deliveryAddress])
 
-  async function searchNearbyRestaurants(addressText) {
+  const searchNearbyRestaurants = useCallback(async (addressText) => {
     const query = addressText.trim()
     if (!query) {
       setSearchStatus('Enter an address or postcode first.')
@@ -70,7 +70,7 @@ function HomePage() {
     setIsSearchingNearby(true)
     setSearchStatus('Finding your location...')
     setActiveCategory(null)
-    scrollToRestaurants()
+    restaurantSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
     const location = await geocodeAddress(query)
 
@@ -100,7 +100,16 @@ function HomePage() {
 
     setNearbyRestaurants(places)
     setSearchStatus(`Showing ${places.length} restaurants near ${query}`)
-  }
+  }, [app])
+
+  useEffect(() => {
+    const nearQuery = searchParams.get('near')
+    if (nearQuery) {
+      setHeroAddress(nearQuery)
+      searchNearbyRestaurants(nearQuery)
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, setSearchParams, searchNearbyRestaurants])
 
   const filteredRestaurants = activeCategory
     ? nearbyRestaurants.filter((r) => r.categoryTag === activeCategory)
@@ -128,11 +137,6 @@ function HomePage() {
     scrollToRestaurants()
   }
 
-  function handlePopularChip(chip) {
-    setActiveCategory(chip)
-    scrollToRestaurants()
-  }
-
   function openRestaurantMenu(restaurant) {
     if (hasBasketFromOtherRestaurant(app, restaurant.restaurantId)) {
       setPendingRestaurant(restaurant)
@@ -154,13 +158,7 @@ function HomePage() {
   }
 
   function toggleFavorite(restaurantId) {
-    setFavoriteIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(restaurantId)) next.delete(restaurantId)
-      else next.add(restaurantId)
-      localStorage.setItem('qb_favorites', JSON.stringify([...next]))
-      return next
-    })
+    app.toggleFavoriteRestaurant(restaurantId)
   }
 
   if (isLoading) {
@@ -186,10 +184,25 @@ function HomePage() {
         onClearedBasket={continueToPendingRestaurant}
       />
 
-      <section
-        className="relative bg-cover bg-center text-white"
-        style={{ backgroundImage: `url(${localPhotos.heroBackground})` }}
-      >
+      <section className="relative overflow-hidden text-white min-h-[420px] md:min-h-[520px]">
+        {!heroVideoFailed ? (
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={localPhotos.heroPoster}
+            onError={() => setHeroVideoFailed(true)}
+          >
+            <source src={localPhotos.heroVideo} type="video/mp4" />
+          </video>
+        ) : (
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${localPhotos.heroBackground})` }}
+          />
+        )}
         <div className="absolute inset-0 bg-black/55" />
         <div className="relative max-w-6xl mx-auto px-4 py-20 md:py-28">
           <h1 className="text-4xl md:text-5xl font-bold max-w-xl leading-tight">
@@ -219,22 +232,6 @@ function HomePage() {
             >
               {isSearchingNearby ? 'Searching...' : 'Find restaurants →'}
             </CtaButton>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2 text-sm items-center">
-            <span className="text-gray-200">Popular near you:</span>
-            {['Pizza', 'Sushi', 'Burgers'].map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => handlePopularChip(chip)}
-                className={`px-3 py-1 rounded-full ${
-                  activeCategory === chip ? 'bg-white text-red-600' : 'bg-white/20 text-white'
-                }`}
-              >
-                {chip}
-              </button>
-            ))}
           </div>
         </div>
       </section>

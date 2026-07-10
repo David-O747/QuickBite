@@ -7,6 +7,7 @@ function PasswordField({
   fieldValue,
   onChange,
   showStrength = false,
+  submitAttempted = false,
 }) {
   const miEnabled = useMicroInteractions()
   const [isFocused, setIsFocused] = useState(false)
@@ -17,14 +18,20 @@ function PasswordField({
   const hasMinLength = fieldValue.length >= 8
   const isStrong = hasLetter && hasNumber && hasMinLength
 
+  const showValidation = touched || submitAttempted
+  const isEmpty = !fieldValue
+  const showRequiredError = showValidation && isEmpty
+  const showStrengthError = showValidation && !isEmpty && !isStrong && showStrength
+
   function handleBlur() {
     setIsFocused(false)
     setTouched(true)
   }
 
   let fieldClass = 'mi-field w-full px-3 py-2 rounded-lg text-sm'
-  if (miEnabled && touched && isStrong) fieldClass += ' mi-valid'
-  if (miEnabled && touched && fieldValue && !isStrong) fieldClass += ' mi-invalid'
+  if (miEnabled && showValidation && isStrong) fieldClass += ' mi-valid'
+  if (miEnabled && showValidation && fieldValue && !isStrong) fieldClass += ' mi-invalid'
+  if (miEnabled && showRequiredError) fieldClass += ' mi-invalid'
 
   const requirements = [
     { label: '1 letter', met: hasLetter },
@@ -45,6 +52,10 @@ function PasswordField({
         onFocus={() => setIsFocused(true)}
         onBlur={handleBlur}
         autoComplete="new-password"
+        aria-invalid={showRequiredError || showStrengthError}
+        aria-describedby={
+          showRequiredError || showStrengthError ? `${fieldId}_error` : undefined
+        }
         className={fieldClass}
       />
 
@@ -61,8 +72,15 @@ function PasswordField({
         </ul>
       )}
 
-      {miEnabled && touched && fieldValue && !isStrong && (
-        <p className="mt-1 text-xs text-red-600">Password needs 1 letter, 1 number, 8+ characters</p>
+      {showRequiredError && (
+        <p id={`${fieldId}_error`} className="mt-1 text-xs text-red-600" role="alert">
+          Password is required
+        </p>
+      )}
+      {showStrengthError && (
+        <p id={`${fieldId}_error`} className="mt-1 text-xs text-red-600" role="alert">
+          Password needs 1 letter, 1 number, and 8+ characters
+        </p>
       )}
     </div>
   )

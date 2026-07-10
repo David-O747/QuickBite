@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
 import { MicroInteractionsProvider } from './context/MicroInteractionsContext'
 import MisclickTracker from './components/MisclickTracker'
-import ResearcherTaskKeys from './components/ResearcherTaskKeys'
+import TaskKeyListener from './components/TaskKeyListener'
 import HomePage from './pages/HomePage'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
@@ -21,6 +21,7 @@ import HelpCentrePage from './pages/HelpCentrePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import CookiePolicyPage from './pages/CookiePolicyPage'
 import RestaurantMenuPage from './pages/RestaurantMenuPage'
+import AccountPage from './pages/AccountPage'
 
 const MICRO_INTERACTIONS_ENABLED =
   import.meta.env.VITE_SITE_VERSION !== 'A'
@@ -32,7 +33,7 @@ function App() {
         <div className={MICRO_INTERACTIONS_ENABLED ? 'mi-on' : 'mi-off'}>
           <BrowserRouter>
             <MisclickTracker />
-            <ResearcherTaskKeys />
+            <TaskKeyListener />
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/offers" element={<OffersPage />} />
@@ -45,6 +46,7 @@ function App() {
               <Route path="/info/:pageSlug" element={<InfoPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/account" element={<AccountPage />} />
               <Route path="/browse" element={<BrowsePage />} />
               <Route path="/restaurant/:restaurantId" element={<RestaurantMenuPage />} />
               <Route path="/product/:productId" element={<ProductPage />} />

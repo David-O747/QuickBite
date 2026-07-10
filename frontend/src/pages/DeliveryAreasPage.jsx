@@ -57,11 +57,19 @@ function DeliveryAreasPage() {
   const [postcodeInput, setPostcodeInput] = useState(app.deliveryAddress || '')
   const [isChecking, setIsChecking] = useState(false)
   const [checkResult, setCheckResult] = useState(null)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [formError, setFormError] = useState('')
 
   async function handleCheckCoverage(event) {
     event.preventDefault()
-    if (!postcodeInput.trim()) return
+    setSubmitAttempted(true)
 
+    if (!postcodeInput.trim()) {
+      setFormError('Please enter an address or postcode.')
+      return
+    }
+
+    setFormError('')
     setIsChecking(true)
     setCheckResult(null)
 
@@ -112,7 +120,12 @@ function DeliveryAreasPage() {
             Enter a UK address or postcode to see if we cover your area.
           </p>
 
-          <form onSubmit={handleCheckCoverage} className="mt-6 max-w-xl">
+          <form onSubmit={handleCheckCoverage} className="mt-6 max-w-xl" noValidate>
+            {formError && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+                {formError}
+              </div>
+            )}
             <FormField
               fieldId="delivery_area_postcode"
               labelText="Address or postcode"
@@ -120,6 +133,7 @@ function DeliveryAreasPage() {
               onChange={setPostcodeInput}
               validateFn={(value) => (!value.trim() ? 'Address or postcode is required' : '')}
               placeholder="e.g. SW1A 1AA or Manchester"
+              submitAttempted={submitAttempted}
             />
             <CtaButton
               ctaButtonId="delivery_check_coverage"

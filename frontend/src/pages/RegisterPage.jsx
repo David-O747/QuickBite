@@ -10,6 +10,7 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import SuccessBanner from '../components/SuccessBanner'
 import { validateEmail, validateUsername } from '../utils/validators'
 import { getPostAuthPath } from '../study/studyFlow'
+import { registerAccount } from '../api/authApi'
 
 function RegisterPage() {
   const navigate = useNavigate()
@@ -21,23 +22,40 @@ function RegisterPage() {
   const [customerPassword, setCustomerPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [formError, setFormError] = useState('')
 
   async function handleRegister(event) {
     event.preventDefault()
+    setSubmitAttempted(true)
 
     const emailError = validateEmail(customerEmail)
     const usernameError = validateUsername(customerUsername)
-    if (emailError || usernameError || !isPasswordStrong(customerPassword)) return
+    const passwordMissing = !customerPassword
+    const passwordWeak = !isPasswordStrong(customerPassword)
 
+    if (emailError || usernameError || passwordMissing || passwordWeak) {
+      setFormError('Please fix the highlighted fields before continuing.')
+      return
+    }
+
+    setFormError('')
     setIsLoading(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 400))
-
-    registerCustomer({ customerEmail, customerUsername })
-    setIsLoading(false)
-    setShowSuccess(true)
-
-    setTimeout(() => navigate(getPostAuthPath(app.basketItemCount)), 1500)
+    try {
+      const data = await registerAccount({
+        email: customerEmail,
+        username: customerUsername,
+        password: customerPassword,
+      })
+      registerCustomer(data.customer)
+      setShowSuccess(true)
+      setTimeout(() => navigate(getPostAuthPath(app.basketItemCount)), 1500)
+    } catch (error) {
+      setFormError(error.message || 'Could not create account. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -51,10 +69,23 @@ function RegisterPage() {
           <SuccessBanner messageText="Account created successfully" isVisible={showSuccess} />
         )}
 
+        {formError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+            <p>{formError}</p>
+            {formError.includes('already exists') && (
+              <p className="mt-2">
+                <Link to="/login" className="font-medium text-red-700 underline">
+                  Log in instead
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
+
         {isLoading ? (
           <LoadingSpinner />
         ) : (
-          <form onSubmit={handleRegister}>
+          <form onSubmit={handleRegister} noValidate>
             <FormField
               fieldId="register_email"
               labelText="Email"
@@ -64,6 +95,7 @@ function RegisterPage() {
               validateFn={validateEmail}
               placeholder="you@example.com"
               autoComplete="email"
+              submitAttempted={submitAttempted}
             />
             <FormField
               fieldId="register_username"
@@ -73,6 +105,7 @@ function RegisterPage() {
               validateFn={validateUsername}
               placeholder="Choose a username"
               autoComplete="username"
+              submitAttempted={submitAttempted}
             />
             <PasswordField
               fieldId="register_password"
@@ -80,6 +113,7 @@ function RegisterPage() {
               fieldValue={customerPassword}
               onChange={setCustomerPassword}
               showStrength
+              submitAttempted={submitAttempted}
             />
 
             <CtaButton ctaButtonId="register_submit" type="submit" className="w-full">

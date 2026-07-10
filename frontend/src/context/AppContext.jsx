@@ -1,10 +1,46 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import {
+  fetchCustomerOrders,
+  fetchCustomerProfile,
+  updateCustomerProfile,
+} from '../api/profileApi'
 
 const AppContext = createContext(null)
 
 const AUTH_KEY = 'qb_customer'
 const SESSION_KEY = 'qb_session_id'
-const ADDRESS_KEY = 'qb_delivery_address'
+const LEGACY_ADDRESS_KEY = 'qb_delivery_address'
+const ORDER_HISTORY_KEY = 'qb_order_history'
+
+function addressKeyForCustomer(customerId) {
+  return customerId ? `qb_delivery_address_${customerId}` : null
+}
+
+function loadDeliveryAddressForCustomer(customer) {
+  if (!customer?.id) return ''
+  return localStorage.getItem(addressKeyForCustomer(customer.id)) || ''
+}
+
+function deliveryDetailsKeyForCustomer(customerId) {
+  return customerId ? `qb_delivery_details_${customerId}` : null
+}
+
+function loadDeliveryDetailsForCustomer(customer) {
+  if (!customer?.id) return null
+  try {
+    return JSON.parse(localStorage.getItem(deliveryDetailsKeyForCustomer(customer.id)) || 'null')
+  } catch {
+    return null
+  }
+}
+
+function loadOrderHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(ORDER_HISTORY_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
 
 function getOrCreateSessionId() {
   let sessionId = sessionStorage.getItem(SESSION_KEY)
@@ -23,19 +59,128 @@ export function AppProvider({ children }) {
       return null
     }
   })
-  const [deliveryAddress, setDeliveryAddressState] = useState(
-    () => localStorage.getItem(ADDRESS_KEY) || ''
+  const [deliveryAddress, setDeliveryAddressState] = useState(() =>
+    loadDeliveryAddressForCustomer(
+      (() => {
+        try {
+          return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null')
+        } catch {
+          return null
+        }
+      })()
+    )
   )
   const [basketItems, setBasketItems] = useState([])
   const [basketRestaurantId, setBasketRestaurantId] = useState(null)
   const [basketRestaurantName, setBasketRestaurantName] = useState('')
   const [lastOrder, setLastOrder] = useState(null)
+  const [orderHistory, setOrderHistory] = useState([])
+  const [savedDeliveryDetails, setSavedDeliveryDetails] = useState(null)
+  const [favoriteRestaurantIds, setFavoriteRestaurantIds] = useState([])
+  const [cookiePreferences, setCookiePreferences] = useState({
+    essential: true,
+    preferences: true,
+    study: true,
+  })
   const [isPageLoading, setIsPageLoading] = useState(false)
   const sessionId = useMemo(() => getOrCreateSessionId(), [])
 
+  useEffect(() => {
+    localStorage.removeItem(LEGACY_ADDRESS_KEY)
+    sessionStorage.removeItem('qb_delivery')
+  }, [])
+
+  function applyProfile(profile) {
+    if (!profile) return
+    if (profile.savedPostcode) {
+      setDeliveryAddressState(profile.savedPostcode)
+    }
+    setSavedDeliveryDetails(profile.deliveryDetails || null)
+    setFavoriteRestaurantIds(profile.favoriteRestaurantIds || [])
+    setCookiePreferences(
+      profile.cookiePreferences || { essential: true, preferences: true, study: true }
+    )
+  }
+
+  const loadCustomerData = useCallback(async (customerId) => {
+    if (!customerId) return
+
+    try {
+      const { profile } = await fetchCustomerProfile(customerId)
+      applyProfile(profile)
+    } catch {
+      const legacyAddress = loadDeliveryAddressForCustomer({ id: customerId })
+      const legacyDetails = loadDeliveryDetailsForCustomer({ id: customerId })
+      if (legacyAddress) setDeliveryAddressState(legacyAddress)
+      if (legacyDetails) setSavedDeliveryDetails(legacyDetails)
+    }
+
+    try {
+      const { orders } = await fetchCustomerOrders(customerId)
+      if (orders?.length) {
+        setOrderHistory(orders)
+      }
+    } catch {
+      const legacyOrders = loadOrderHistory()
+      if (legacyOrders.length) setOrderHistory(legacyOrders)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (customer?.id) {
+      loadCustomerData(customer.id)
+    }
+  }, [customer?.id, loadCustomerData])
+
+  function syncProfilePatch(patch) {
+    if (!customer?.id) return
+    updateCustomerProfile(customer.id, patch).catch(() => {})
+  }
+
+  function saveDeliveryDetails(details) {
+    setSavedDeliveryDetails(details)
+    const storageKey = deliveryDetailsKeyForCustomer(customer?.id)
+    if (storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify(details))
+    }
+    syncProfilePatch({ deliveryDetails: details })
+  }
+
+  function getSavedDeliveryDetails() {
+    if (savedDeliveryDetails) return savedDeliveryDetails
+    return loadDeliveryDetailsForCustomer(customer)
+  }
+
   function setDeliveryAddress(address) {
     setDeliveryAddressState(address)
-    localStorage.setItem(ADDRESS_KEY, address)
+    const storageKey = addressKeyForCustomer(customer?.id)
+    if (storageKey) {
+      if (address) {
+        localStorage.setItem(storageKey, address)
+      } else {
+        localStorage.removeItem(storageKey)
+      }
+    }
+    syncProfilePatch({ savedPostcode: address })
+  }
+
+  function toggleFavoriteRestaurant(restaurantId) {
+    setFavoriteRestaurantIds((current) => {
+      const next = current.includes(restaurantId)
+        ? current.filter((id) => id !== restaurantId)
+        : [...current, restaurantId]
+      syncProfilePatch({ favoriteRestaurantIds: next })
+      return next
+    })
+  }
+
+  function saveCookiePreferences(preferences) {
+    setCookiePreferences(preferences)
+    if (customer?.id) {
+      updateCustomerProfile(customer.id, { cookiePreferences: preferences }).catch(() => {})
+      return
+    }
+    localStorage.setItem('qb_cookie_preferences', JSON.stringify(preferences))
   }
 
   const studyParams = useMemo(() => {
@@ -46,26 +191,37 @@ export function AppProvider({ children }) {
     }
   }, [])
 
+  function persistCustomer(savedCustomer) {
+    setCustomer(savedCustomer)
+    localStorage.setItem(AUTH_KEY, JSON.stringify(savedCustomer))
+  }
+
   function registerCustomer(customerData) {
     const savedCustomer = {
+      id: customerData.id,
       customerEmail: customerData.customerEmail,
       customerUsername: customerData.customerUsername,
     }
-    setCustomer(savedCustomer)
-    localStorage.setItem(AUTH_KEY, JSON.stringify(savedCustomer))
+    persistCustomer(savedCustomer)
+    setDeliveryAddressState(loadDeliveryAddressForCustomer(savedCustomer))
   }
 
   function loginCustomer(customerData) {
     const savedCustomer = {
+      id: customerData.id,
       customerEmail: customerData.customerEmail,
-      customerUsername: customerData.customerUsername || customerData.customerEmail.split('@')[0],
+      customerUsername: customerData.customerUsername,
     }
-    setCustomer(savedCustomer)
-    localStorage.setItem(AUTH_KEY, JSON.stringify(savedCustomer))
+    persistCustomer(savedCustomer)
+    setDeliveryAddressState(loadDeliveryAddressForCustomer(savedCustomer))
   }
 
   function logoutCustomer() {
     setCustomer(null)
+    setDeliveryAddressState('')
+    setSavedDeliveryDetails(null)
+    setFavoriteRestaurantIds([])
+    setOrderHistory([])
     localStorage.removeItem(AUTH_KEY)
   }
 
@@ -147,6 +303,32 @@ export function AppProvider({ children }) {
     setBasketRestaurantName('')
   }
 
+  function saveOrderToHistory(orderRecord) {
+    setOrderHistory((prev) => {
+      return [orderRecord, ...prev.filter((o) => o.orderNumber !== orderRecord.orderNumber)].slice(
+        0,
+        20
+      )
+    })
+  }
+
+  function updateOrderInHistory(orderNumber, updates) {
+    setOrderHistory((prev) => {
+      return prev.map((order) =>
+        order.orderNumber === orderNumber ? { ...order, ...updates } : order
+      )
+    })
+    setLastOrder((current) =>
+      current?.orderNumber === orderNumber ? { ...current, ...updates } : current
+    )
+  }
+
+  function openOrder(orderNumber) {
+    const order = orderHistory.find((entry) => entry.orderNumber === orderNumber)
+    if (order) setLastOrder(order)
+    return order
+  }
+
   function placeOrder(orderDetails) {
     const orderNumber = `QB-${Date.now().toString().slice(-8)}`
     const prepMs = 15000 + Math.floor(Math.random() * 10000)
@@ -180,6 +362,7 @@ export function AppProvider({ children }) {
       placedAt: new Date().toISOString(),
     }
     setLastOrder(orderRecord)
+    saveOrderToHistory(orderRecord)
     clearBasket()
     return orderRecord
   }
@@ -199,6 +382,13 @@ export function AppProvider({ children }) {
     isLoggedIn: Boolean(customer),
     deliveryAddress,
     setDeliveryAddress,
+    getSavedDeliveryDetails,
+    saveDeliveryDetails,
+    favoriteRestaurantIds,
+    toggleFavoriteRestaurant,
+    cookiePreferences,
+    saveCookiePreferences,
+    loadCustomerData,
     basketItems,
     basketTotal,
     basketItemCount,
@@ -210,6 +400,9 @@ export function AppProvider({ children }) {
     clearBasket,
     placeOrder,
     lastOrder,
+    orderHistory,
+    openOrder,
+    updateOrderInHistory,
     isPageLoading,
     setIsPageLoading,
     sessionId,

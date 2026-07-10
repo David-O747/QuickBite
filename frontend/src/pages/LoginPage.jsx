@@ -10,6 +10,7 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import SuccessBanner from '../components/SuccessBanner'
 import { validateEmail, validateRequired } from '../utils/validators'
 import { getPostAuthPath } from '../study/studyFlow'
+import { loginAccount } from '../api/authApi'
 
 function LoginPage() {
   const navigate = useNavigate()
@@ -20,20 +21,37 @@ function LoginPage() {
   const [customerPassword, setCustomerPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [formError, setFormError] = useState('')
 
   async function handleLogin(event) {
     event.preventDefault()
+    setSubmitAttempted(true)
 
-    if (validateEmail(customerEmail) || validateRequired(customerPassword, 'Password')) return
+    const emailError = validateEmail(customerEmail)
+    const passwordError = validateRequired(customerPassword, 'Password')
 
+    if (emailError || passwordError) {
+      setFormError('Please fix the highlighted fields before continuing.')
+      return
+    }
+
+    setFormError('')
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 400))
 
-    loginCustomer({ customerEmail })
-    setIsLoading(false)
-    setShowSuccess(true)
-
-    setTimeout(() => navigate(getPostAuthPath(app.basketItemCount)), 1500)
+    try {
+      const data = await loginAccount({
+        email: customerEmail,
+        password: customerPassword,
+      })
+      loginCustomer(data.customer)
+      setShowSuccess(true)
+      setTimeout(() => navigate(getPostAuthPath(app.basketItemCount)), 1500)
+    } catch (error) {
+      setFormError(error.message || 'Could not sign in. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -47,10 +65,23 @@ function LoginPage() {
           <SuccessBanner messageText="Logged in successfully" isVisible={showSuccess} />
         )}
 
+        {formError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+            <p>{formError}</p>
+            {formError.includes('No account found') && (
+              <p className="mt-2">
+                <Link to="/register" className="font-medium text-red-700 underline">
+                  Create an account
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
+
         {isLoading ? (
           <LoadingSpinner />
         ) : (
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleLogin} noValidate>
             <FormField
               fieldId="login_email"
               labelText="Email"
@@ -60,6 +91,7 @@ function LoginPage() {
               validateFn={validateEmail}
               placeholder="you@example.com"
               autoComplete="email"
+              submitAttempted={submitAttempted}
             />
             <PasswordField
               fieldId="login_password"
@@ -67,6 +99,7 @@ function LoginPage() {
               fieldValue={customerPassword}
               onChange={setCustomerPassword}
               showStrength={false}
+              submitAttempted={submitAttempted}
             />
 
             <CtaButton ctaButtonId="login_submit" type="submit" className="w-full">

@@ -1,10 +1,3 @@
--- ============================================================
--- QuickBite dissertation — run this ENTIRE file once in
--- Supabase Dashboard → SQL Editor → New query → Run
--- ============================================================
-
--- ---------- STUDY METRICS (3 tasks + CTA / misclick / hesitation) ----------
-
 create table if not exists study_task_events (
   id bigint generated always as identity primary key,
   participant_id text not null,
@@ -17,9 +10,6 @@ create table if not exists study_task_events (
   task_completion_time_ms bigint not null,
   created_at timestamptz default now()
 );
-
-comment on table study_task_events is
-  'Task 1=locate_product (home→menu), Task 2=add_to_basket (menu→add), Task 3=complete_checkout (basket→order placed)';
 
 create table if not exists study_cta_events (
   id bigint generated always as identity primary key,
@@ -37,9 +27,6 @@ create table if not exists study_cta_events (
   is_misclick boolean default false,
   created_at timestamptz default now()
 );
-
-comment on table study_cta_events is
-  'CTA clicks, misclicks (is_misclick=true), hesitation_ms (hover→click, Site B only)';
 
 create table if not exists study_popup_events (
   id bigint generated always as identity primary key,
@@ -67,7 +54,6 @@ create table if not exists study_post_order_feedback (
   created_at timestamptz default now()
 );
 
--- Manual researcher markers (optional — Alt+Shift+2 / Alt+Shift+3 in browser)
 create table if not exists study_task_markers (
   id bigint generated always as identity primary key,
   participant_id text not null,
@@ -79,11 +65,6 @@ create table if not exists study_task_markers (
   marker_time bigint not null,
   created_at timestamptz default now()
 );
-
-comment on table study_task_markers is
-  'Researcher verbal-cue timestamps: marker_type = verbal_start';
-
--- ---------- RLS: anon can INSERT only (silent client logging) ----------
 
 alter table study_task_events enable row level security;
 alter table study_cta_events enable row level security;
@@ -131,15 +112,11 @@ drop policy if exists "allow authenticated read task markers" on study_task_mark
 create policy "allow authenticated read task markers"
   on study_task_markers for select to authenticated using (true);
 
--- ---------- Indexes for export / analysis ----------
-
 create index if not exists idx_study_task_participant on study_task_events (participant_id);
 create index if not exists idx_study_task_session on study_task_events (session_id);
 create index if not exists idx_study_cta_participant on study_cta_events (participant_id);
 create index if not exists idx_study_cta_session on study_cta_events (session_id);
 create index if not exists idx_study_cta_task on study_cta_events (task_name);
-
--- ---------- Analysis view (export from Table Editor or SQL) ----------
 
 create or replace view study_participant_summary as
 select
@@ -158,15 +135,11 @@ left join study_cta_events c
   on c.session_id = t.session_id and c.participant_id = t.participant_id
 group by t.participant_id, t.age_group, t.session_id, t.site_version;
 
--- ---------- Upgrades if you ran an older study_tables.sql ----------
-
 alter table study_task_events add column if not exists site_version text not null default 'B';
 alter table study_cta_events add column if not exists task_name text;
 alter table study_cta_events add column if not exists site_version text not null default 'B';
 alter table study_popup_events add column if not exists site_version text not null default 'B';
 alter table study_post_order_feedback add column if not exists site_version text not null default 'B';
-
--- ---------- ORDER BACKEND (orders, notifications, help) ----------
 
 create table if not exists orders (
   id uuid primary key default gen_random_uuid(),
@@ -232,3 +205,48 @@ alter table orders enable row level security;
 alter table order_items enable row level security;
 alter table order_notifications enable row level security;
 alter table order_help_requests enable row level security;
+
+create table if not exists customers (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  username text not null unique,
+  password_hash text not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_customers_email on customers (email);
+create index if not exists idx_customers_username on customers (username);
+
+alter table customers enable row level security;
+
+create table if not exists customer_profiles (
+  customer_id uuid primary key references customers(id) on delete cascade,
+  saved_postcode text not null default '',
+  delivery_full_name text not null default '',
+  delivery_street text not null default '',
+  delivery_city text not null default '',
+  delivery_postcode text not null default '',
+  delivery_phone text not null default '',
+  favorite_restaurant_ids jsonb not null default '[]'::jsonb,
+  cookie_preferences boolean not null default true,
+  cookie_study boolean not null default true,
+  updated_at timestamptz default now()
+);
+
+create table if not exists support_messages (
+  id bigint generated always as identity primary key,
+  customer_id uuid references customers(id) on delete set null,
+  name text not null default '',
+  email text not null default '',
+  message text not null default '',
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_support_messages_customer on support_messages (customer_id);
+create index if not exists idx_support_messages_email on support_messages (email);
+
+alter table orders add column if not exists customer_id uuid references customers(id) on delete set null;
+create index if not exists idx_orders_customer_id on orders (customer_id);
+
+alter table customer_profiles enable row level security;
+alter table support_messages enable row level security;

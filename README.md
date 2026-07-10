@@ -1,176 +1,195 @@
-# QuickBite - Food Ordering Platform
+# QuickBite
 
-University assignment project featuring a food ordering website with A/B testing capabilities for studying micro-interactions.
+QuickBite is a food-ordering web app built for a usability study comparing two site versions. Participants browse restaurants, build a basket, check out, and track their order. Version **B** includes micro-interactions; version **A** is the same layout and flow without those effects.
 
-## 📋 Project Overview
+## Stack
 
-QuickBite is a full-stack food ordering platform designed to compare user experience with and without micro-interactions (Site A vs Site B). The project demonstrates modern web development practices while serving as a research platform for UI/UX studies.
+- **Frontend:** React, Vite, Tailwind CSS
+- **Backend:** Node.js, Express
+- **Database:** Supabase (Postgres)
 
-## 🎯 Project Goals
+## Getting started
 
-1. **Educational**: Demonstrate React + Node.js full-stack development
-2. **Research**: A/B testing of micro-interactions impact on user engagement
-3. **Practical**: Functional food ordering system with realistic features
-4. **Professional**: Production-ready code structure and best practices
+### 1. Database
 
-## 🏗️ Architecture
+Run the full schema in the Supabase SQL editor:
 
 ```
-quickbite/
-├── frontend/                 # React + Vite + Tailwind CSS
-│   ├── src/pages/           # AuthPage, HomePage, etc.
-│   ├── src/components/      # Reusable UI components
-│   └── public/              # Static assets
-├── backend/                  # Node.js + Express API
-│   ├── src/routes/          # API endpoints
-│   ├── src/controllers/     # Business logic
-│   └── src/models/          # Data models
-└── supabase/                 # Study database schema
+supabase/setup_all.sql
 ```
 
-## 🚀 Quick Start
+### 2. Backend
 
-### Frontend Development
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Open http://localhost:5173
-
-### Backend Development
 ```bash
 cd backend
 npm install
+```
+
+Create `backend/.env`:
+
+```
+PORT=3000
+NODE_ENV=development
+FRONTEND_ORIGIN=http://127.0.0.1:5173,http://localhost:5173
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
+Optional (email/SMS notifications; without these, messages are logged only):
+
+```
+SENDGRID_API_KEY=
+SENDGRID_FROM_EMAIL=
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM_NUMBER=
+```
+
+Start the API:
+
+```bash
+npm start
+```
+
+Runs on `http://localhost:3000`.
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+Create `frontend/.env`:
+
+```
+VITE_SITE_VERSION=B
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_API_URL=http://127.0.0.1:3000
+```
+
+Start the app:
+
+```bash
 npm run dev
 ```
-API runs on http://localhost:3000
 
-## 🔧 Tech Stack
+Opens on `http://localhost:5173`.
 
-### Frontend
-- **React 19** - UI library
-- **Vite** - Build tool and dev server
-- **Tailwind CSS v4** - Utility-first styling
-- **React Router DOM v7** - Client-side routing
+## Site versions
 
-### Backend
-- **Node.js** - Runtime environment
-- **Express** - Web framework
-- **CORS** - Cross-origin resource sharing
+Set `VITE_SITE_VERSION` in `frontend/.env`:
 
-### Planned Integrations
-- **Supabase** - Database, authentication, real-time
-- **Netlify** - Frontend hosting
-- **Railway/Render** - Backend hosting
+| Value | Behaviour |
+|-------|-----------|
+| `B` | Micro-interactions enabled (default for the study) |
+| `A` | Same UI, micro-interactions turned off |
 
-## 📊 A/B Testing Features
+Rebuild or restart the dev server after changing this value.
 
-### Site B Micro-Interactions
-1. **Active border on auth fields** - Visual focus indication
-2. **Inline validation** - Real-time form feedback
-3. **Password strength ticks** - Progressive disclosure
-4. **CTA hover transition** - Smooth button effects
-5. **CTA click confirmation** - Visual feedback on click
-6. **Add-to-basket animation** - Item addition feedback
-7. **Basket count bounce** - Attention-grabbing counter
-8. **Loading indicator** - Within 100ms response
-9. **Checkout progress** - Visual workflow tracking
-10. **Success messages** - Confirmation feedback
+## Participant link
 
-### Tracking Metrics
-- Task completion times (login, order, checkout)
-- CTA interaction rates and patterns
-- User hesitation and misclicks
-- Session duration and engagement
-- Data stored in Supabase with participant demographics
+Send participants a URL with their ID and age group:
 
-## 🎨 Design System
+```
+http://localhost:5173/?participant_id=P001&age_group=65-74
+```
 
-### Color Palette
-- Primary: `#FF6B35` (Vibrant orange for food/branding)
-- Secondary: `#4ECDC4` (Calm teal for accents)
-- Accent: `#FFD166` (Warm yellow for highlights)
-- Dark: `#2D3047` (Dark blue for text)
-- Light: `#F7F7F7` (Clean background)
+Replace `P001` and `65-74` per session. If these are missing, the app still works but logs the participant as `anonymous`.
 
-### Typography
-- Primary font: Inter (system-ui fallback)
-- Consistent spacing scale
-- Mobile-responsive typography
-- Clear visual hierarchy
+## Study tasks
 
-## 📁 Project Structure Details
+Three timed tasks are recorded in Supabase:
 
-### Frontend (`frontend/`)
-- **Pages**: Complete login/register and homepage
-- **Components**: Modular, reusable UI elements
-- **Routing**: Clean navigation between views
-- **State Management**: React hooks for local state
-- **Styling**: Tailwind CSS with custom utilities
+| Task | Name | When the timer starts | When it ends |
+|------|------|----------------------|--------------|
+| 1 | Locate a product | Home page loads | User opens a restaurant menu |
+| 2 | Add to basket | Researcher presses **Alt+Shift+2**, or first item is added | First item added to basket |
+| 3 | Complete checkout | Researcher presses **Alt+Shift+3**, or user reaches checkout | Order placed |
 
-### Backend (`backend/`)
-- **REST API**: JSON-based endpoints
-- **Middleware**: CORS, JSON parsing, error handling
-- **Simulated Data**: Menu items, order processing
-- **Analytics Endpoint**: A/B test data collection
+**Alt+Shift+2** and **Alt+Shift+3** are for the researcher to mark when they give the verbal task instruction.
 
-## 🧪 Testing Approach
+## Micro-interactions (version B only)
 
-### A/B Testing Methodology
-1. **Control Group (Site A)**: Basic functionality
-2. **Experimental Group (Site B)**: Enhanced micro-interactions
-3. **Random Assignment**: Participants randomly assigned
-4. **Data Collection**: Supabase storage with timestamps
-5. **Analysis**: Comparative metrics analysis
+On version A, content and buttons behave the same but without the animations and transitions below.
 
-### Technical Testing
-- Component testing with React Testing Library
-- API endpoint testing with Jest
-- End-to-end testing with Cypress (planned)
-- Performance monitoring with Lighthouse
+| # | Effect | Where |
+|---|--------|-------|
+| 1 | Button hover scale, shadow, and press feedback | Primary buttons across the site (`CtaButton`) |
+| 2 | Spinning loader | Home, restaurant menu, checkout, register, login, delivery areas |
+| 3 | Success message fade-in | Register, login, order confirmation |
+| 4 | Input focus border highlight | Forms (register, login, checkout, help centre, delivery areas) |
+| 5 | Green/red field borders and valid tick | Form fields after the user has typed |
+| 6 | Password rules checklist while focused | Register page |
+| 7 | Checkout step dots and lines animate | Basket → checkout → confirmation |
+| 8 | Basket count pulse in the header | After adding an item from a restaurant menu |
+| 9 | “Item added to your basket” fade-in | Restaurant menu, under the add button |
+| 10 | Order confirmed check icon fade-in | Order confirmation page |
 
-## 📈 Future Roadmap
+Courier map pulse on the “On the way” step runs on both versions.
 
-### Phase 1 (Current)
-- ✅ Basic frontend with login/homepage
-- ✅ Tailwind CSS integration
-- ✅ Site A/B toggle functionality
-- ✅ Basic backend API structure
+## Main features
 
-### Phase 2 (Next)
-- Supabase integration (auth, database)
-- Complete food menu with categories
-- Shopping cart functionality
-- Checkout process
-- Order history
+**Home**
+- Search by address or UK postcode (OpenStreetMap geocoding)
+- Category filters and restaurant cards
+- Favourites (saved per logged-in account)
 
-### Phase 3 (Future)
-- Real-time order tracking
-- Payment processing (Stripe)
-- Restaurant admin panel
-- Customer reviews and ratings
-- Mobile app (React Native)
+**Restaurant menu**
+- Sections: Popular, Mains, Sides, Beverages, Desserts
+- Add to basket with restaurant conflict popup if the basket already has items from elsewhere
 
-## 👥 Team & Contribution
+**Basket & checkout**
+- Quantity controls, promo code field
+- Delivery details with inline validation
+- Card-style payment step (demo — full card numbers are not stored)
+- Orders saved to Supabase via the backend API
 
-This is a university assignment project designed for:
-- **Computer Science Students**: Full-stack development practice
-- **UX Researchers**: A/B testing methodology
-- **Instructors**: Teaching modern web development
+**Account** (`/account`)
+- Active and past orders
+- Get Help links per order
+- Profile data synced from Supabase (address, favourites, cookie prefs)
 
-## 📝 License & Academic Use
+**Help centre** (`/info/help-centre`)
+- Contact form; messages stored in `support_messages`
 
-This project is created for educational purposes as part of a university assignment. The code is open for academic use with proper attribution.
+**Order confirmation**
+- Delivery timeline (Confirmed → Preparing → On the way → Delivered) with timed stages
+- Post-order feedback popup appears 5 seconds after placing an order (star ratings + optional text)
+- Live track view and help options
 
-## 🔗 Useful Links
+**Auth**
+- Register and login against the `customers` table
+- Passwords hashed on the server
 
-- [React Documentation](https://react.dev)
-- [Vite Documentation](https://vitejs.dev)
-- [Tailwind CSS Documentation](https://tailwindcss.com)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Express Documentation](https://expressjs.com)
+**Cookies** (`/info/cookie-policy`)
+- Preference toggles saved to the user profile when logged in
 
----
+## What gets stored
 
-**University Assignment Project** • **Food Ordering Platform** • **A/B Testing Research**
+| Data | Storage |
+|------|---------|
+| Task times, button clicks, popups, feedback | Supabase study tables |
+| Orders and items | Supabase `orders`, `order_items` |
+| Accounts | Supabase `customers` |
+| Saved address, favourites, cookies | Supabase `customer_profiles` |
+| Help messages | Supabase `support_messages` |
+| Basket (before checkout) | Browser memory only |
+
+## Deployment
+
+- **Frontend:** Netlify (`netlify.toml` — build from `frontend/`, publish `dist/`)
+- **Backend:** Render (`render.yaml` — Node service in `backend/`)
+
+Set the same environment variables on each host. Point `VITE_API_URL` at the live API URL and add that origin to `FRONTEND_ORIGIN` on the backend.
+
+## Project structure
+
+```
+backend/          Express API (auth, orders, profile, support)
+frontend/         React app
+supabase/         setup_all.sql — full database schema
+netlify.toml      Frontend hosting config
+render.yaml       Backend hosting config
+```

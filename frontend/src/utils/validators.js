@@ -1,12 +1,20 @@
 export function validateEmail(value) {
-  if (!value.trim()) return 'Email is required'
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email'
+  const trimmed = value.trim()
+  if (!trimmed) return 'Email is required'
+  if (/\s/.test(value)) return 'Email cannot contain spaces'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return 'Enter a valid email address'
   return ''
 }
 
 export function validateUsername(value) {
   if (!value.trim()) return 'Username is required'
   if (value.trim().length < 3) return 'Username must be at least 3 characters'
+  if (/\s/.test(value)) return 'Username cannot contain spaces'
+  return ''
+}
+
+export function validatePassword(value) {
+  if (!value) return 'Password is required'
   return ''
 }
 

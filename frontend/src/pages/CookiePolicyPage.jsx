@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useApp } from '../context/AppContext'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
 import PolicyPopup from '../components/PolicyPopup'
@@ -43,13 +44,14 @@ const cookieSections = [
 ]
 
 function CookiePolicyPage() {
+  const app = useApp()
   const [activeSection, setActiveSection] = useState(null)
-  const [preferences, setPreferences] = useState({
-    essential: true,
-    preferences: true,
-    study: true,
-  })
+  const [preferences, setPreferences] = useState(app.cookiePreferences)
   const [savedMessage, setSavedMessage] = useState('')
+
+  useEffect(() => {
+    setPreferences(app.cookiePreferences)
+  }, [app.cookiePreferences])
 
   function togglePreference(key) {
     if (key === 'essential') return
@@ -57,8 +59,12 @@ function CookiePolicyPage() {
   }
 
   function savePreferences() {
-    localStorage.setItem('qb_cookie_preferences', JSON.stringify(preferences))
-    setSavedMessage('Cookie preferences saved on this device.')
+    app.saveCookiePreferences(preferences)
+    setSavedMessage(
+      app.isLoggedIn
+        ? 'Cookie preferences saved to your account.'
+        : 'Cookie preferences saved on this device.'
+    )
   }
 
   return (
