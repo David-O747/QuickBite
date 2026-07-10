@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useMicroInteractions } from '../context/MicroInteractionsContext'
 
-// MI 7 + 9: focus border + password strength (register only)
 function PasswordField({
   fieldId,
   labelText,

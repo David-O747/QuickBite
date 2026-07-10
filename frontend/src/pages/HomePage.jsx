@@ -50,7 +50,6 @@ function HomePage() {
     return () => clearTimeout(timer)
   }, [])
 
-  // support /?near=SW1A%201AA from header location save
   useEffect(() => {
     const nearQuery = searchParams.get('near')
     if (nearQuery) {
@@ -84,7 +83,6 @@ function HomePage() {
     app.setDeliveryAddress(query)
     setSearchStatus(`Searching restaurants near ${location.displayName.split(',').slice(0, 2).join(',')}...`)
 
-    // more results, wider area (8km), up to 90 places
     const places = await fetchOsmRestaurantsNear(
       location.latitude,
       location.longitude,
@@ -242,7 +240,6 @@ function HomePage() {
       </section>
 
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-2">
-        {/* categories */}
         <section className="home-dot-band rounded-3xl px-4 py-8 sm:px-8 relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-red-100/60" />
           <div className="absolute left-6 bottom-4 home-fade-watermark hidden sm:block">
@@ -306,7 +303,6 @@ function HomePage() {
           </div>
         </section>
 
-        {/* restaurants */}
         <section
           id="restaurant-list"
           ref={restaurantSectionRef}

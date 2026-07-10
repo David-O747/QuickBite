@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/** Read-only check: order tables exist? */
 import { readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'

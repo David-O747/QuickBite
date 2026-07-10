@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { useMicroInteractions } from '../context/MicroInteractionsContext'
 
-// MI 7: active border on focus
-// MI 8: validation on blur only
 function FormField({
   fieldId,
   labelText,

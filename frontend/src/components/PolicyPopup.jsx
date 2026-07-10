@@ -1,6 +1,5 @@
 import CtaButton from './CtaButton'
 
-// simple in-page popup for policy details (no extra animation libraries)
 function PolicyPopup({ isOpen, titleText, bodyText, onClose }) {
   if (!isOpen) return null
 

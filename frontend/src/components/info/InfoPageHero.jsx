@@ -1,6 +1,5 @@
 import { InfoIconBadge, topicIcons } from './InfoTopicIcons'
 
-// designed hero — gradient + topic icon, no unrelated stock photos
 function InfoPageHero({ titleText, introText, iconKey = 'help', badgeText = '' }) {
   const heroIcon = topicIcons[iconKey]
 

@@ -1,6 +1,3 @@
-// curated photos that match each food type
-// each place in a category gets a different photo from that category pool
-
 const pizzaPhotos = [
   'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=400&fit=crop',
   'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&h=400&fit=crop',
@@ -88,20 +85,17 @@ const photosByCategory = {
   Sandwiches: sandwichPhotos,
 }
 
-// category circles — always the correct food type
 export function getCategoryPhoto(categoryName) {
   const pool = photosByCategory[categoryName] || pizzaPhotos
   return pool[0]
 }
 
-// restaurant/product photo: correct food type + different image per index
 export function getPhotoByCategoryIndex(categoryTag, indexInCategory) {
   const pool = photosByCategory[categoryTag] || pizzaPhotos
   return pool[indexInCategory % pool.length]
 }
 
 export function getPhotoForRestaurant(restaurantId, categoryTag = 'Pizza') {
-  // stable pick from the matching category pool
   let hash = 0
   const value = String(restaurantId)
   for (let i = 0; i < value.length; i += 1) {

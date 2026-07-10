@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 
-// silent research logging — no UI shown to participants
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
@@ -32,7 +31,6 @@ async function insertRow(tableName, rowData) {
   const payload = withSiteVersion(rowData)
 
   if (!supabase) {
-    // local fallback so study still works without keys during development
     const stored = JSON.parse(localStorage.getItem('qb_tracking_log') || '[]')
     stored.push({ tableName, ...payload, loggedAt: Date.now() })
     localStorage.setItem('qb_tracking_log', JSON.stringify(stored))
@@ -45,7 +43,6 @@ async function insertRow(tableName, rowData) {
       console.warn(`[tracking] ${tableName}:`, error.message)
     }
   } catch {
-    // fail silently — never interrupt participant flow
   }
 }
 

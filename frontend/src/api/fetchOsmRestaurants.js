@@ -1,4 +1,3 @@
-// OpenStreetMap Overpass — free restaurants near a lat/lng (no API key)
 import { getPhotoByCategoryIndex } from '../data/foodImages'
 
 const categoryTags = ['Pizza', 'Burgers', 'Sushi', 'Desserts', 'Salads', 'Asian', 'Sandwiches']
@@ -76,7 +75,6 @@ function parseOsmPlaces(placeList) {
       deliveryFee: placeId % 3 === 0 ? 'Free' : `£${(1 + (placeId % 4) * 0.5).toFixed(2)}`,
       ratingScore: (4 + (placeId % 10) / 10).toFixed(1),
       reviewCount: 120 + (placeId % 400),
-      // photo matches category, different image for each place in that category
       imagePath: getPhotoByCategoryIndex(categoryTag, indexInCategory),
       isFeatured: uniquePlaces.length < 3,
     })

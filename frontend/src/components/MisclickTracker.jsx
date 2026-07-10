@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { getStudyMeta, logMisclick } from '../tracking/trackingService'
 
-// silent misclick logging — clicks outside any CTA button
 function MisclickTracker() {
   const app = useApp()
 

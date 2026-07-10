@@ -1,4 +1,3 @@
-// MI 6: checkout step bar only — Basket → Checkout → Confirm
 const checkoutSteps = [
   { stepKey: 'basket', stepLabel: 'Basket' },
   { stepKey: 'payment', stepLabel: 'Checkout' },

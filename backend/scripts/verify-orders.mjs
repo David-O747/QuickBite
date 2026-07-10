@@ -1,10 +1,6 @@
 #!/usr/bin/env node
-/**
- * Verifies order tables + backend API.
- * Usage: cd backend && node scripts/verify-orders.mjs
- */
 
-import { readFileSync, existsSync } from 'fs'
+import { readFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'

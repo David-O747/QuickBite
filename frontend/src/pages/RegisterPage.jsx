@@ -31,7 +31,6 @@ function RegisterPage() {
 
     setIsLoading(true)
 
-    // simulate async register
     await new Promise((resolve) => setTimeout(resolve, 400))
 
     registerCustomer({ customerEmail, customerUsername })

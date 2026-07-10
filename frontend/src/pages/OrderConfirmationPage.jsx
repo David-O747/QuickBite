@@ -240,7 +240,6 @@ function OrderConfirmationPage() {
         if (!active) return
         setLiveBackendOrder(data.order)
       } catch {
-        // keep local fallback timeline if backend unavailable
       }
     }
 
@@ -341,7 +340,6 @@ function OrderConfirmationPage() {
           message: `Customer flagged late order on confirmation page (${lastOrder.orderNumber}).`,
         })
       } catch {
-        // non-blocking
       }
     }
     navigate(

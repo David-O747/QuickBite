@@ -2,9 +2,6 @@ import { useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { getStudyMeta, logTaskMarker, startTaskTimer } from '../tracking/trackingService'
 
-// Hidden researcher controls — not shown in UI.
-// Alt+Shift+2 = start Task 2 timer (after verbal cue on menu page)
-// Alt+Shift+3 = start Task 3 timer (after verbal cue on basket/checkout)
 function ResearcherTaskKeys() {
   const app = useApp()
 
