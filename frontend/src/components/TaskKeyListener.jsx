@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { getStudyMeta, logTaskMarker, startTaskTimer } from '../tracking/trackingService'
 
-function ResearcherTaskKeys() {
+function TaskKeyListener() {
   const app = useApp()
 
   useEffect(() => {
@@ -31,4 +31,4 @@ function ResearcherTaskKeys() {
   return null
 }
 
-export default ResearcherTaskKeys
+export default TaskKeyListener

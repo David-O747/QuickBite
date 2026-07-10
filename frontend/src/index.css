@@ -102,6 +102,19 @@ body {
   to { transform: rotate(360deg); }
 }
 
+.track-map-spinner {
+  animation: mi-spin 0.8s linear infinite;
+}
+
+@keyframes track-courier-bob {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+.track-courier-pulse .track-courier-dot {
+  animation: track-courier-bob 1.2s ease-in-out infinite;
+}
+
 .mi-success-banner {
   opacity: 0;
 }

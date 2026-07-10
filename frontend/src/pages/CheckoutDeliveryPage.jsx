@@ -21,15 +21,8 @@ import {
   getStoredPromoCode,
   SERVICE_FEE,
 } from '../utils/checkoutFees'
-import CtaButton from '../components/CtaButton'
 import { endTaskTimer, getStudyMeta } from '../tracking/trackingService'
 import { createOrder } from '../api/orderApi'
-
-const DEMO_CARD = {
-  number: '4242 4242 4242 4242',
-  expiry: '12/30',
-  cvv: '123',
-}
 
 function TruckIcon() {
   return (
@@ -68,6 +61,7 @@ function CheckoutDeliveryPage() {
   const [cardCvv, setCardCvv] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState('')
+  const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const promoCode = getStoredPromoCode()
   const promoDiscount = useMemo(
@@ -85,18 +79,47 @@ function CheckoutDeliveryPage() {
   }, [app.basketItems.length, navigate])
 
   useEffect(() => {
-    const saved = JSON.parse(sessionStorage.getItem('qb_delivery') || 'null')
+    if (!app.isLoggedIn || !app.customer?.id) {
+      setFullName('')
+      setStreetAddress('')
+      setCity('')
+      setPostcode('')
+      setPhoneNumber('')
+      return
+    }
+
+    let saved = app.getSavedDeliveryDetails()
+    if (!saved) {
+      try {
+        const legacy = JSON.parse(sessionStorage.getItem('qb_delivery') || 'null')
+        if (legacy) {
+          app.saveDeliveryDetails(legacy)
+          saved = legacy
+          sessionStorage.removeItem('qb_delivery')
+        }
+      } catch {
+      }
+    }
+
     if (saved) {
       setFullName(saved.fullName || '')
       setStreetAddress(saved.streetAddress || '')
       setCity(saved.city || '')
       setPostcode(saved.postcode || '')
       setPhoneNumber(saved.phoneNumber || '')
+      return
     }
-  }, [])
+
+    setFullName('')
+    setStreetAddress('')
+    setCity('')
+    setPostcode('')
+    setPhoneNumber('')
+  }, [app.isLoggedIn, app.customer?.id])
 
   async function handlePlaceOrder(event) {
     if (event?.preventDefault) event.preventDefault()
+    setSubmitAttempted(true)
     setFormError('')
 
     const errors = [
@@ -111,7 +134,7 @@ function CheckoutDeliveryPage() {
     ].filter(Boolean)
 
     if (errors.length > 0) {
-      setFormError(errors[0])
+      setFormError(errors[0] || 'Please fix the highlighted fields before continuing.')
       return
     }
 
@@ -128,7 +151,7 @@ function CheckoutDeliveryPage() {
       await new Promise((resolve) => setTimeout(resolve, 500))
 
       const deliveryDetails = { fullName, streetAddress, city, postcode, phoneNumber }
-      sessionStorage.setItem('qb_delivery', JSON.stringify(deliveryDetails))
+      app.saveDeliveryDetails(deliveryDetails)
 
       const backendOrder = await createOrder({
         participant_id: app.participantId,
@@ -146,6 +169,7 @@ function CheckoutDeliveryPage() {
         contact_email: app.customer?.customerEmail || '',
         contact_phone: phoneNumber,
         card_last_four: cardNumber.replace(/\s/g, '').slice(-4),
+        customer_id: app.customer?.id || null,
       })
 
       app.placeOrder({
@@ -189,8 +213,7 @@ function CheckoutDeliveryPage() {
         </div>
 
         <p className="text-sm text-gray-500 mb-6 max-w-2xl">
-          Demo checkout only — no real payment is taken. Fill the form or use the demo card,
-          then Place Order to open the confirmation page.
+          Enter your delivery and payment details, then place your order.
         </p>
 
         {formError && (
@@ -204,7 +227,7 @@ function CheckoutDeliveryPage() {
         ) : (
           <div className="grid lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-6">
-              <form id={FORM_ID} onSubmit={handlePlaceOrder}>
+              <form id={FORM_ID} onSubmit={handlePlaceOrder} noValidate>
                 <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                   <div className="flex items-center gap-2 mb-5">
                     <TruckIcon />
@@ -221,6 +244,7 @@ function CheckoutDeliveryPage() {
                         validateFn={(v) => validateRequired(v, 'Full name')}
                         placeholder="e.g. Alex Johnson"
                         autoComplete="name"
+                        submitAttempted={submitAttempted}
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -232,6 +256,7 @@ function CheckoutDeliveryPage() {
                         validateFn={(v) => validateRequired(v, 'Street address')}
                         placeholder="123 Main Street"
                         autoComplete="street-address"
+                        submitAttempted={submitAttempted}
                       />
                     </div>
                     <FormField
@@ -242,6 +267,7 @@ function CheckoutDeliveryPage() {
                       validateFn={(v) => validateRequired(v, 'City')}
                       placeholder="London"
                       autoComplete="address-level2"
+                      submitAttempted={submitAttempted}
                     />
                     <FormField
                       fieldId="delivery_postcode"
@@ -251,6 +277,7 @@ function CheckoutDeliveryPage() {
                       validateFn={validatePostcode}
                       placeholder="SW1A 1AA"
                       autoComplete="postal-code"
+                      submitAttempted={submitAttempted}
                     />
                     <div className="sm:col-span-2">
                       <FormField
@@ -261,64 +288,49 @@ function CheckoutDeliveryPage() {
                         validateFn={(v) => validateRequired(v, 'Phone number')}
                         placeholder="+44 7..."
                         autoComplete="tel"
+                        submitAttempted={submitAttempted}
                       />
                     </div>
                   </div>
                 </section>
 
                 <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm mt-6">
-                  <div className="flex items-center justify-between gap-3 mb-5">
-                    <div className="flex items-center gap-2">
-                      <CardIcon />
-                      <h2 className="text-lg font-bold">Payment Method</h2>
-                    </div>
-                    <CtaButton
-                      ctaButtonId="fill_demo_card"
-                      type="button"
-                      className="bg-white! text-red-600! border border-red-600 px-3! py-1.5! text-xs rounded-lg"
-                      onClick={() => {
-                        setCardNumber(DEMO_CARD.number)
-                        setCardExpiry(DEMO_CARD.expiry)
-                        setCardCvv(DEMO_CARD.cvv)
-                        setFormError('')
-                      }}
-                    >
-                      Fill demo card
-                    </CtaButton>
+                  <div className="flex items-center gap-2 mb-5">
+                    <CardIcon />
+                    <h2 className="text-lg font-bold">Payment Method</h2>
                   </div>
-
-                  <p className="text-xs text-gray-500 mb-4">
-                    Mock card only. Example: 4242 4242 4242 4242 · 12/30 · 123 — no charge.
-                  </p>
 
                   <FormField
                     fieldId="demo_number"
-                    labelText="Demo Payment Number"
+                    labelText="Card Number"
                     fieldValue={cardNumber}
                     onChange={setCardNumber}
                     validateFn={validateCardNumber}
-                    placeholder="4242 4242 4242 4242"
+                    placeholder="Card number"
                     autoComplete="new-password"
+                    submitAttempted={submitAttempted}
                   />
 
                   <div className="grid sm:grid-cols-2 gap-x-4">
                     <FormField
                       fieldId="demo_expiry"
-                      labelText="Demo Expiry"
+                      labelText="Expiry Date"
                       fieldValue={cardExpiry}
                       onChange={setCardExpiry}
                       validateFn={validateExpiry}
                       placeholder="MM/YY"
                       autoComplete="new-password"
+                      submitAttempted={submitAttempted}
                     />
                     <FormField
                       fieldId="demo_code"
-                      labelText="Demo Security Code"
+                      labelText="Security Code"
                       fieldValue={cardCvv}
                       onChange={setCardCvv}
                       validateFn={validateCvv}
                       placeholder="123"
                       autoComplete="new-password"
+                      submitAttempted={submitAttempted}
                     />
                   </div>
                 </section>

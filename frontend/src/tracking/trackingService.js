@@ -37,13 +37,7 @@ async function insertRow(tableName, rowData) {
     return
   }
 
-  try {
-    const { error } = await supabase.from(tableName).insert(payload)
-    if (error && import.meta.env.DEV) {
-      console.warn(`[tracking] ${tableName}:`, error.message)
-    }
-  } catch {
-  }
+  await supabase.from(tableName).insert(payload).catch(() => undefined)
 }
 
 export function startTaskTimer(taskName) {

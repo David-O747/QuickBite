@@ -1,7 +1,11 @@
 import { getCategoryPhoto, getPhotoByCategoryIndex } from './foodImages'
 
 export const localPhotos = {
-  heroBackground: '/images/pizza.png',
+  heroVideo: '/videos/hero-food.mp4',
+  heroPoster:
+    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1920&h=1080&fit=crop&q=85',
+  heroBackground:
+    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1920&h=1080&fit=crop&q=85',
   burgerPhoto: '/images/burger.png',
   pizzaPhoto: '/images/pizza.png',
   pizzaCategory: '/images/pizza-icon.png',

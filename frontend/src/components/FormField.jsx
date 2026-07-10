@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMicroInteractions } from '../context/MicroInteractionsContext'
 
 function FormField({
@@ -10,22 +10,37 @@ function FormField({
   validateFn,
   placeholder = '',
   autoComplete,
+  submitAttempted = false,
 }) {
   const miEnabled = useMicroInteractions()
   const [touched, setTouched] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  const isValid = touched && !errorMessage && fieldValue
-  const isInvalid = touched && Boolean(errorMessage)
+  const showValidation = touched || submitAttempted
+  const isInvalid = showValidation && Boolean(errorMessage)
+  const isValid = miEnabled && touched && !errorMessage && fieldValue
+
+  useEffect(() => {
+    if (!showValidation || !validateFn) return
+    setErrorMessage(validateFn(fieldValue) || '')
+  }, [fieldValue, showValidation, validateFn])
 
   function handleBlur() {
-    if (!miEnabled) return
     setTouched(true)
     if (validateFn) {
-      const result = validateFn(fieldValue)
-      setErrorMessage(result || '')
+      setErrorMessage(validateFn(fieldValue) || '')
     }
   }
+
+  function handleChange(nextValue) {
+    onChange(nextValue)
+    if ((touched || submitAttempted) && validateFn) {
+      setErrorMessage(validateFn(nextValue) || '')
+    }
+  }
+
+  const inputType = fieldType === 'email' ? 'text' : fieldType
+  const inputMode = fieldType === 'email' ? 'email' : undefined
 
   let fieldClass = 'mi-field w-full px-3 py-2 rounded-lg text-sm'
   if (miEnabled && isValid) fieldClass += ' mi-valid'
@@ -38,19 +53,26 @@ function FormField({
       </label>
       <input
         id={fieldId}
-        type={fieldType}
+        type={inputType}
+        inputMode={inputMode}
         value={fieldValue}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         onBlur={handleBlur}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        aria-invalid={isInvalid}
+        aria-describedby={isInvalid ? `${fieldId}_error` : undefined}
         className={fieldClass}
       />
-      {miEnabled && isInvalid && (
-        <p className="mt-1 text-xs text-red-600">{errorMessage}</p>
+      {isInvalid && (
+        <p id={`${fieldId}_error`} className="mt-1 text-xs text-red-600" role="alert">
+          {errorMessage}
+        </p>
       )}
-      {miEnabled && isValid && (
-        <p className="mt-1 text-xs text-green-600">✓</p>
+      {isValid && (
+        <p className="mt-1 text-xs text-green-600" aria-hidden="true">
+          ✓
+        </p>
       )}
     </div>
   )

@@ -1,7 +1,8 @@
 const express = require('express')
-const cors = require('cors')
 const crypto = require('crypto')
+const cors = require('cors')
 const { createClient } = require('@supabase/supabase-js')
+const { hashPassword, verifyPassword } = require('./authPassword')
 require('dotenv').config()
 
 const app = express()
@@ -27,6 +28,373 @@ app.use(express.json({ limit: '1mb' }))
 function randomSupportPhone() {
   return `07${Math.floor(100000000 + Math.random() * 900000000)}`
 }
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase()
+}
+
+function normalizeUsername(username) {
+  return String(username || '').trim()
+}
+
+function toCustomerResponse(record) {
+  return {
+    id: record.id,
+    customerEmail: record.email,
+    customerUsername: record.username,
+  }
+}
+
+function authSetupError() {
+  return 'Account database is not set up.'
+}
+
+function isMissingCustomersTable(error) {
+  return (
+    error?.code === 'PGRST205' ||
+    String(error?.message || '').includes("Could not find the table 'public.customers'")
+  )
+}
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Authentication service is not configured' })
+    }
+
+    const email = normalizeEmail(req.body.email)
+    const username = normalizeUsername(req.body.username)
+    const password = String(req.body.password || '')
+
+    if (!email || !username || !password) {
+      return res.status(400).json({ error: 'Email, username, and password are required' })
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Enter a valid email address' })
+    }
+
+    if (username.length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters' })
+    }
+
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password) || password.length < 8) {
+      return res.status(400).json({
+        error: 'Password needs 1 letter, 1 number, and 8+ characters',
+      })
+    }
+
+    const { data: existingByEmail } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (existingByEmail) {
+      return res.status(409).json({
+        error: 'An account with this email already exists. Please log in instead.',
+      })
+    }
+
+    const { data: existingByUsername } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle()
+
+    if (existingByUsername) {
+      return res.status(409).json({ error: 'This username is already taken.' })
+    }
+
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .insert({
+        email,
+        username,
+        password_hash: hashPassword(password),
+      })
+      .select('id, email, username')
+      .single()
+
+    if (error || !customer) {
+      if (error && isMissingCustomersTable(error)) {
+        return res.status(500).json({ error: authSetupError() })
+      }
+      return res.status(500).json({ error: 'Could not create account' })
+    }
+
+    await supabase.from('customer_profiles').insert({ customer_id: customer.id })
+
+    res.status(201).json({
+      success: true,
+      customer: toCustomerResponse(customer),
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Unexpected error creating account' })
+  }
+})
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Authentication service is not configured' })
+    }
+
+    const email = normalizeEmail(req.body.email)
+    const password = String(req.body.password || '')
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' })
+    }
+
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select('id, email, username, password_hash')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (error) {
+      if (isMissingCustomersTable(error)) {
+        return res.status(500).json({ error: authSetupError() })
+      }
+      return res.status(500).json({ error: 'Could not verify account' })
+    }
+
+    if (!customer) {
+      return res.status(401).json({
+        error: 'No account found with this email. Please register first.',
+      })
+    }
+
+    if (!verifyPassword(password, customer.password_hash)) {
+      return res.status(401).json({ error: 'Incorrect password. Please try again.' })
+    }
+
+    res.json({
+      success: true,
+      customer: toCustomerResponse(customer),
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Unexpected error signing in' })
+  }
+})
+
+function toProfileResponse(row) {
+  return {
+    savedPostcode: row.saved_postcode || '',
+    deliveryDetails: {
+      fullName: row.delivery_full_name || '',
+      streetAddress: row.delivery_street || '',
+      city: row.delivery_city || '',
+      postcode: row.delivery_postcode || '',
+      phoneNumber: row.delivery_phone || '',
+    },
+    favoriteRestaurantIds: Array.isArray(row.favorite_restaurant_ids)
+      ? row.favorite_restaurant_ids
+      : [],
+    cookiePreferences: {
+      essential: true,
+      preferences: row.cookie_preferences !== false,
+      study: row.cookie_study !== false,
+    },
+  }
+}
+
+function mapOrderForClient(order, items = []) {
+  return {
+    orderNumber: order.order_number,
+    orderItems: (items || []).map((item) => ({
+      productId: item.product_id,
+      productName: item.product_name,
+      productDescription: item.product_description || '',
+      imagePath: item.image_path || '',
+      unitPrice: Number(item.unit_price),
+      quantity: item.quantity,
+      restaurantId: item.product_id,
+      restaurantName: order.restaurant_name,
+    })),
+    restaurantName: order.restaurant_name,
+    orderSubtotal: Number(order.subtotal),
+    deliveryFee: Number(order.delivery_fee),
+    serviceFee: Number(order.service_fee),
+    promoDiscount: Number(order.promo_discount),
+    promoCode: order.promo_code || '',
+    orderTotal: Number(order.total),
+    estimatedArrival: order.estimated_arrival_label || '8-12 minutes',
+    backendOrderId: order.id,
+    trackingPublicId: order.tracking_public_id,
+    supportPhone: order.support_phone || '',
+    backendStatus: order.status || 'confirmed',
+    deliveryDetails: {
+      fullName: order.delivery_full_name || '',
+      streetAddress: order.delivery_street || '',
+      city: order.delivery_city || '',
+      postcode: order.delivery_postcode || '',
+      phoneNumber: order.delivery_phone || '',
+    },
+    contactEmail: order.contact_email || '',
+    contactPhone: order.contact_phone || '',
+    placedAt: order.created_at,
+  }
+}
+
+async function ensureCustomerProfile(customerId) {
+  const { data: existing } = await supabase
+    .from('customer_profiles')
+    .select('*')
+    .eq('customer_id', customerId)
+    .maybeSingle()
+
+  if (existing) return existing
+
+  const { data: created, error } = await supabase
+    .from('customer_profiles')
+    .insert({ customer_id: customerId })
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return created
+}
+
+app.get('/api/customers/:customerId/profile', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Supabase backend is not configured' })
+    }
+
+    const profile = await ensureCustomerProfile(req.params.customerId)
+    res.json({ profile: toProfileResponse(profile) })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Could not load profile' })
+  }
+})
+
+app.put('/api/customers/:customerId/profile', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Supabase backend is not configured' })
+    }
+
+    const customerId = req.params.customerId
+    await ensureCustomerProfile(customerId)
+
+    const body = req.body || {}
+    const delivery = body.deliveryDetails || {}
+    const cookies = body.cookiePreferences || {}
+
+    const updates = {
+      updated_at: new Date().toISOString(),
+    }
+
+    if (body.savedPostcode !== undefined) updates.saved_postcode = body.savedPostcode
+    if (delivery.fullName !== undefined) updates.delivery_full_name = delivery.fullName
+    if (delivery.streetAddress !== undefined) updates.delivery_street = delivery.streetAddress
+    if (delivery.city !== undefined) updates.delivery_city = delivery.city
+    if (delivery.postcode !== undefined) updates.delivery_postcode = delivery.postcode
+    if (delivery.phoneNumber !== undefined) updates.delivery_phone = delivery.phoneNumber
+    if (body.favoriteRestaurantIds !== undefined) {
+      updates.favorite_restaurant_ids = body.favoriteRestaurantIds
+    }
+    if (cookies.preferences !== undefined) updates.cookie_preferences = Boolean(cookies.preferences)
+    if (cookies.study !== undefined) updates.cookie_study = Boolean(cookies.study)
+
+    const { data: profile, error } = await supabase
+      .from('customer_profiles')
+      .update(updates)
+      .eq('customer_id', customerId)
+      .select('*')
+      .single()
+
+    if (error || !profile) {
+      return res.status(500).json({ error: 'Could not save profile' })
+    }
+
+    res.json({ success: true, profile: toProfileResponse(profile) })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Could not save profile' })
+  }
+})
+
+app.get('/api/customers/:customerId/orders', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Supabase backend is not configured' })
+    }
+
+    const { data: orders, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('customer_id', req.params.customerId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) {
+      return res.status(500).json({ error: 'Could not load orders' })
+    }
+
+    const orderList = orders || []
+    const orderIds = orderList.map((order) => order.id)
+    let itemsByOrder = {}
+
+    if (orderIds.length > 0) {
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('*')
+        .in('order_id', orderIds)
+
+      itemsByOrder = (items || []).reduce((acc, item) => {
+        if (!acc[item.order_id]) acc[item.order_id] = []
+        acc[item.order_id].push(item)
+        return acc
+      }, {})
+    }
+
+    res.json({
+      orders: orderList.map((order) => mapOrderForClient(order, itemsByOrder[order.id] || [])),
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Could not load orders' })
+  }
+})
+
+app.post('/api/support/messages', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Supabase backend is not configured' })
+    }
+
+    const name = String(req.body.name || '').trim()
+    const email = normalizeEmail(req.body.email)
+    const message = String(req.body.message || '').trim()
+    const customerId = req.body.customer_id || null
+
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Name, email, and message are required' })
+    }
+
+    const { error } = await supabase.from('support_messages').insert({
+      customer_id: customerId,
+      name,
+      email,
+      message,
+    })
+
+    if (error) {
+      return res.status(500).json({ error: 'Could not save message' })
+    }
+
+    res.status(201).json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Unexpected error saving message' })
+  }
+})
 
 async function logNotification(orderId, channel, target, messageBody, status = 'queued') {
   if (!supabase) return
@@ -201,6 +569,7 @@ app.post('/api/orders', async (req, res) => {
       contact_email = '',
       contact_phone = '',
       card_last_four = '',
+      customer_id = null,
     } = req.body
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -236,6 +605,7 @@ app.post('/api/orders', async (req, res) => {
         contact_phone: contact_phone || delivery_details.phoneNumber || '',
         card_last_four: card_last_four || '',
         support_phone: randomSupportPhone(),
+        customer_id: customer_id || null,
       })
       .select('*')
       .single()
@@ -256,6 +626,24 @@ app.post('/api/orders', async (req, res) => {
     }))
 
     await supabase.from('order_items').insert(rows)
+
+    if (customer_id && delivery_details) {
+      await supabase
+        .from('customer_profiles')
+        .upsert(
+          {
+            customer_id,
+            saved_postcode: delivery_details.postcode || '',
+            delivery_full_name: delivery_details.fullName || '',
+            delivery_street: delivery_details.streetAddress || '',
+            delivery_city: delivery_details.city || '',
+            delivery_postcode: delivery_details.postcode || '',
+            delivery_phone: delivery_details.phoneNumber || contact_phone || '',
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'customer_id' }
+        )
+    }
 
     await notifyOrderUpdate(orderRecord, 'Order confirmed')
     queueStatusTransitions(orderRecord)
@@ -336,6 +724,5 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`QuickBite API server running on http://localhost:${PORT}`)
-  console.log(`Health check: http://localhost:${PORT}/api/health`)
+  console.log(`API listening on ${PORT}`)
 })

@@ -131,6 +131,7 @@ function SiteHeader({ pulseBasket = false, pageVariant = 'default' }) {
       return
     }
     setAccountOpen(false)
+    navigate('/account')
   }
 
   return (

@@ -4,6 +4,9 @@ import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
 import CtaButton from '../components/CtaButton'
 import FormField from '../components/FormField'
+import { validateEmail, validateRequired } from '../utils/validators'
+import { submitSupportMessage } from '../api/profileApi'
+import { useApp } from '../context/AppContext'
 import InfoPageHero from '../components/info/InfoPageHero'
 import { InfoIconBadge } from '../components/info/InfoTopicIcons'
 
@@ -86,6 +89,7 @@ const faqGroups = [
 ]
 
 function HelpCentrePage() {
+  const app = useApp()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
@@ -94,6 +98,10 @@ function HelpCentrePage() {
   const [contactEmail, setContactEmail] = useState('')
   const [contactMessage, setContactMessage] = useState('')
   const [formSent, setFormSent] = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [isSending, setIsSending] = useState(false)
+  const [messageError, setMessageError] = useState('')
   const issueType = searchParams.get('issue') || ''
   const issueOrderId = searchParams.get('order_id') || ''
 
@@ -129,10 +137,37 @@ function HelpCentrePage() {
     setOpenQuestionId((current) => (current === questionId ? null : questionId))
   }
 
-  function handleContactSubmit(event) {
+  async function handleContactSubmit(event) {
     event.preventDefault()
-    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) return
-    setFormSent(true)
+    setSubmitAttempted(true)
+
+    const nameError = validateRequired(contactName, 'Name')
+    const emailError = validateEmail(contactEmail)
+    const nextMessageError = validateRequired(contactMessage, 'Message')
+
+    setMessageError(nextMessageError)
+
+    if (nameError || emailError || nextMessageError) {
+      setFormError('Please fix the highlighted fields before sending.')
+      return
+    }
+
+    setFormError('')
+    setIsSending(true)
+
+    try {
+      await submitSupportMessage({
+        name: contactName.trim(),
+        email: contactEmail.trim(),
+        message: contactMessage.trim(),
+        customer_id: app.customer?.id || null,
+      })
+      setFormSent(true)
+    } catch (error) {
+      setFormError(error.message || 'Could not send message. Please try again.')
+    } finally {
+      setIsSending(false)
+    }
   }
 
   return (
@@ -257,13 +292,19 @@ function HelpCentrePage() {
                 Message sent. Our support team will reply to your email.
               </div>
             ) : (
-              <form onSubmit={handleContactSubmit} className="mt-4">
+              <form onSubmit={handleContactSubmit} className="mt-4" noValidate>
+                {formError && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+                    {formError}
+                  </div>
+                )}
                 <FormField
                   fieldId="help_name"
                   labelText="Your name"
                   fieldValue={contactName}
                   onChange={setContactName}
-                  validateFn={(v) => (!v.trim() ? 'Name is required' : '')}
+                  validateFn={(v) => validateRequired(v, 'Name')}
+                  submitAttempted={submitAttempted}
                 />
                 <FormField
                   fieldId="help_email"
@@ -271,11 +312,8 @@ function HelpCentrePage() {
                   fieldType="email"
                   fieldValue={contactEmail}
                   onChange={setContactEmail}
-                  validateFn={(v) => {
-                    if (!v.trim()) return 'Email is required'
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email'
-                    return ''
-                  }}
+                  validateFn={validateEmail}
+                  submitAttempted={submitAttempted}
                 />
                 <div className="mb-4">
                   <label htmlFor="help_message" className="block text-sm font-medium mb-1">
@@ -284,14 +322,32 @@ function HelpCentrePage() {
                   <textarea
                     id="help_message"
                     value={contactMessage}
-                    onChange={(e) => setContactMessage(e.target.value)}
+                    onChange={(e) => {
+                      setContactMessage(e.target.value)
+                      if (submitAttempted) {
+                        setMessageError(validateRequired(e.target.value, 'Message'))
+                      }
+                    }}
+                    onBlur={() => {
+                      if (submitAttempted) {
+                        setMessageError(validateRequired(contactMessage, 'Message'))
+                      }
+                    }}
                     rows={4}
-                    className="mi-field w-full px-3 py-2 rounded-lg text-sm"
+                    aria-invalid={Boolean(messageError && submitAttempted)}
+                    className={`mi-field w-full px-3 py-2 rounded-lg text-sm${
+                      messageError && submitAttempted ? ' border-red-500' : ''
+                    }`}
                     placeholder="Describe your issue..."
                   />
+                  {messageError && submitAttempted && (
+                    <p className="mt-1 text-xs text-red-600" role="alert">
+                      {messageError}
+                    </p>
+                  )}
                 </div>
-                <CtaButton ctaButtonId="help_send_message" type="submit" className="w-full rounded-lg">
-                  Send message
+                <CtaButton ctaButtonId="help_send_message" type="submit" className="w-full rounded-lg" disabled={isSending}>
+                  {isSending ? 'Sending...' : 'Send message'}
                 </CtaButton>
               </form>
             )}
