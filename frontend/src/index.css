@@ -1,0 +1,268 @@
+@import 'tailwindcss';
+
+:root {
+  --brand-primary: #dc2626;
+  --brand-primary-dark: #b91c1c;
+  --brand-primary-light: #ef4444;
+  --field-neutral: #d1d5db;
+  --field-valid: #16a34a;
+  --field-invalid: #dc2626;
+  --text-dark: #1f2937;
+  --bg-page: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* homepage section skin — static only, no extra motion */
+.home-dot-band {
+  background-color: #fafafa;
+  background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.home-section-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #dc2626;
+}
+
+.home-title {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+.home-card-surface {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.home-restaurant-band {
+  background: linear-gradient(180deg, #ffffff 0%, #fff7f5 48%, #ffffff 100%);
+}
+
+.home-fade-watermark {
+  pointer-events: none;
+  opacity: 0.045;
+}
+
+/* ========== SITE B MICRO-INTERACTIONS ONLY ========== */
+/* Site A: body.site-a disables all of these via overrides below */
+
+/* 1. Click confirmation — scale 0.95 + darken, 150ms */
+.mi-cta {
+  background-color: var(--brand-primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.mi-on .mi-cta {
+  transition:
+    transform 150ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+/* Stronger hover so Site B feedback is obvious during the study */
+.mi-on .mi-cta:hover {
+  transform: scale(1.04);
+  background-color: var(--brand-primary-light) !important;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+}
+
+.mi-on .mi-cta:active {
+  transform: scale(0.95);
+  background-color: var(--brand-primary-dark) !important;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+}
+
+/* Site A: no hover/active motion */
+.mi-off .mi-cta:hover,
+.mi-off .mi-cta:active {
+  transform: none;
+  background-color: var(--brand-primary);
+}
+
+/* 3. Loading spinner — simple only */
+.mi-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: var(--brand-primary);
+  border-radius: 50%;
+}
+
+.mi-on .mi-spinner {
+  animation: mi-spin 0.7s linear infinite;
+}
+
+@keyframes mi-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 4. Success banner fade-in */
+.mi-success-banner {
+  opacity: 0;
+}
+
+.mi-on .mi-success-banner.mi-visible {
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+.mi-off .mi-success-banner.mi-visible {
+  opacity: 1;
+}
+
+/* 5. Item added — text fade + basket pulse */
+.mi-added-label {
+  opacity: 0;
+}
+
+.mi-on .mi-added-label.mi-visible {
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+.mi-off .mi-added-label.mi-visible {
+  opacity: 1;
+}
+
+.mi-basket-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mi-on .mi-basket-count.mi-pulse {
+  animation: mi-pulse 200ms ease;
+}
+
+@keyframes mi-pulse {
+  0% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* 6. Checkout progress */
+.mi-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mi-on .mi-step-dot {
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.mi-step-dot.mi-current {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+.mi-step-dot.mi-done {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+.mi-step-line {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+}
+
+.mi-on .mi-step-line {
+  transition: background-color 200ms ease;
+}
+
+.mi-step-line.mi-done {
+  background: var(--brand-primary);
+}
+
+/* 7. Active state border on form fields */
+.mi-field {
+  border: 2px solid var(--field-neutral);
+  outline: none;
+}
+
+.mi-on .mi-field {
+  transition: border-color 150ms ease;
+}
+
+.mi-on .mi-field:focus {
+  border-color: var(--brand-primary);
+}
+
+.mi-off .mi-field:focus {
+  border-color: var(--field-neutral);
+}
+
+.mi-field.mi-valid {
+  border-color: var(--field-valid);
+}
+
+.mi-field.mi-invalid {
+  border-color: var(--field-invalid);
+}
+
+/* 9. Password strength tick */
+.mi-req-tick {
+  display: inline-block;
+  width: 14px;
+}
+
+.mi-on .mi-req-tick {
+  transition: opacity 150ms ease, color 150ms ease;
+}
+
+/* 10. Basket success inline message */
+.mi-basket-msg {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mi-on .mi-basket-msg.mi-visible {
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+.mi-off .mi-basket-msg.mi-visible {
+  opacity: 1;
+}
+
+/* order confirmation checkmark */
+.mi-check-icon {
+  opacity: 0;
+}
+
+.mi-on .mi-check-icon.mi-visible {
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+.mi-off .mi-check-icon.mi-visible {
+  opacity: 1;
+}
+
+/* Post-order research feedback — identical on Site A and B, no motion */
+.study-feedback-modal,
+.study-feedback-modal * {
+  transition: none !important;
+  animation: none !important;
+}
