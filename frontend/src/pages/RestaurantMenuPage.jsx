@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { useMicroInteractions } from '../context/MicroInteractionsContext'
 import {
   buildMenuForRestaurant,
   getMenuReturnPath,
@@ -27,6 +28,7 @@ function RestaurantMenuPage() {
   const { restaurantId } = useParams()
   const app = useApp()
   const navigate = useNavigate()
+  const miEnabled = useMicroInteractions()
 
   const [isLoading, setIsLoading] = useState(true)
   const [activeSection, setActiveSection] = useState('popular')
@@ -75,16 +77,23 @@ function RestaurantMenuPage() {
     navigate(getMenuReturnPath())
   }
 
+  function addButtonLabel(productId, defaultLabel, addedLabel = 'Added ✓') {
+    if (miEnabled && addedProductId === productId) return addedLabel
+    return defaultLabel
+  }
+
   function showAddedFeedback(menuItem) {
-    setAddedProductId(menuItem.productId)
-    setPulseBasket(true)
-    setBasketMsgProductId(menuItem.productId)
+    if (miEnabled) {
+      setAddedProductId(menuItem.productId)
+      setPulseBasket(true)
+      setBasketMsgProductId(menuItem.productId)
+      setTimeout(() => setPulseBasket(false), 200)
+      setTimeout(() => setAddedProductId(null), 1500)
+      setTimeout(() => setBasketMsgProductId(null), 2000)
+    }
+
     setShowBasketPopup(false)
     setPendingMenuItem(null)
-
-    setTimeout(() => setPulseBasket(false), 200)
-    setTimeout(() => setAddedProductId(null), 1500)
-    setTimeout(() => setBasketMsgProductId(null), 2000)
   }
 
   function handleAddToBasket(menuItem) {
@@ -308,8 +317,9 @@ function RestaurantMenuPage() {
                         className="w-full mt-auto rounded-lg"
                         onClick={() => handleAddToBasket(item)}
                       >
-                        {addedProductId === item.productId ? 'Added ✓' : 'Add to Basket'}
+                        {addButtonLabel(item.productId, 'Add to Basket')}
                       </CtaButton>
+                      {miEnabled && (
                       <p
                         className={`mi-basket-msg mt-2 text-xs text-green-600 ${
                           basketMsgProductId === item.productId ? 'mi-visible' : ''
@@ -317,6 +327,7 @@ function RestaurantMenuPage() {
                       >
                         Item added to your basket
                       </p>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -354,8 +365,9 @@ function RestaurantMenuPage() {
                           className="mt-4 rounded-lg w-fit"
                           onClick={() => handleAddToBasket(featuredMain)}
                         >
-                          {addedProductId === featuredMain.productId ? 'Added ✓' : 'Add to Basket'}
+                          {addButtonLabel(featuredMain.productId, 'Add to Basket')}
                         </CtaButton>
+                        {miEnabled && (
                         <p
                           className={`mi-basket-msg mt-2 text-xs text-green-600 ${
                             basketMsgProductId === featuredMain.productId ? 'mi-visible' : ''
@@ -363,6 +375,7 @@ function RestaurantMenuPage() {
                         >
                           Item added to your basket
                         </p>
+                        )}
                       </div>
                     </div>
                   </article>
@@ -389,7 +402,7 @@ function RestaurantMenuPage() {
                           className="!px-3 !py-2 !rounded-full shrink-0"
                           onClick={() => handleAddToBasket(item)}
                         >
-                          {addedProductId === item.productId ? '✓' : '+'}
+                          {addButtonLabel(item.productId, '+', '✓')}
                         </CtaButton>
                       </div>
                     </article>
@@ -417,7 +430,7 @@ function RestaurantMenuPage() {
                       className="mt-2 !bg-gray-100 !text-gray-800 !px-4 !py-1.5 rounded-full text-xs"
                       onClick={() => handleAddToBasket(item)}
                     >
-                      {addedProductId === item.productId ? 'Added ✓' : 'ADD'}
+                      {addButtonLabel(item.productId, 'ADD')}
                     </CtaButton>
                   </article>
                 ))}
@@ -443,7 +456,7 @@ function RestaurantMenuPage() {
                       className="!px-3 !py-2 !rounded-full"
                       onClick={() => handleAddToBasket(item)}
                     >
-                      {addedProductId === item.productId ? '✓' : '+'}
+                      {addButtonLabel(item.productId, '+', '✓')}
                     </CtaButton>
                   </article>
                 ))}
@@ -473,7 +486,7 @@ function RestaurantMenuPage() {
                         className="mt-3 rounded-lg"
                         onClick={() => handleAddToBasket(item)}
                       >
-                        {addedProductId === item.productId ? 'Added ✓' : 'Add to Basket'}
+                        {addButtonLabel(item.productId, 'Add to Basket')}
                       </CtaButton>
                     </div>
                   </article>

@@ -4,6 +4,7 @@ import {
   fetchCustomerProfile,
   updateCustomerProfile,
 } from '../api/profileApi'
+import { readStudyParams, isStudySession as checkStudySession } from '../study/studySession'
 
 const AppContext = createContext(null)
 
@@ -183,13 +184,8 @@ export function AppProvider({ children }) {
     localStorage.setItem('qb_cookie_preferences', JSON.stringify(preferences))
   }
 
-  const studyParams = useMemo(() => {
-    const params = new URLSearchParams(window.location.search)
-    return {
-      participantId: params.get('participant_id') || 'anonymous',
-      ageGroup: params.get('age_group') || 'unknown',
-    }
-  }, [])
+  const studyParams = useMemo(() => readStudyParams(), [])
+  const isStudySession = checkStudySession(studyParams.participantId)
 
   function persistCustomer(savedCustomer) {
     setCustomer(savedCustomer)
@@ -408,6 +404,7 @@ export function AppProvider({ children }) {
     sessionId,
     participantId: studyParams.participantId,
     ageGroup: studyParams.ageGroup,
+    isStudySession,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

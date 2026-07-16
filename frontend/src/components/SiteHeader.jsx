@@ -39,7 +39,7 @@ function ProfileIcon() {
 
 function SiteHeader({ pulseBasket = false, pageVariant = 'default' }) {
   const app = useApp()
-  const { basketItemCount, isLoggedIn, logoutCustomer, customer, deliveryAddress, setDeliveryAddress } = app
+  const { basketItemCount, isLoggedIn, logoutCustomer, customer, deliveryAddress, setDeliveryAddress, isStudySession } = app
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -171,7 +171,7 @@ function SiteHeader({ pulseBasket = false, pageVariant = 'default' }) {
           )}
         </nav>
 
-        {pageVariant !== 'basket' && pageVariant !== 'checkout' && pageVariant !== 'confirm' && (
+        {pageVariant !== 'basket' && pageVariant !== 'checkout' && pageVariant !== 'confirm' && !isStudySession && (
         <div className="flex-1 max-w-md mx-auto relative" ref={searchRef}>
           <input
             type="search"

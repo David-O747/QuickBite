@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
 import { MicroInteractionsProvider } from './context/MicroInteractionsContext'
 import MisclickTracker from './components/MisclickTracker'
-import TaskKeyListener from './components/TaskKeyListener'
+import StudyLoginGuard from './components/StudyLoginGuard'
 import HomePage from './pages/HomePage'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
@@ -33,6 +33,7 @@ function App() {
         <div className={MICRO_INTERACTIONS_ENABLED ? 'mi-on' : 'mi-off'}>
           <BrowserRouter>
             <MisclickTracker />
+            <StudyLoginGuard />
             <TaskKeyListener />
             <Routes>
               <Route path="/" element={<HomePage />} />
