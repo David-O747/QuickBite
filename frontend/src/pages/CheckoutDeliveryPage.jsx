@@ -21,8 +21,9 @@ import {
   getStoredPromoCode,
   SERVICE_FEE,
 } from '../utils/checkoutFees'
-import { endTaskTimer, getStudyMeta } from '../tracking/trackingService'
+import { endTaskTimer, getStudyMeta, startTaskTimer } from '../tracking/trackingService'
 import { createOrder } from '../api/orderApi'
+import { STUDY_CHECKOUT_PREFILL } from '../study/studySession'
 
 function TruckIcon() {
   return (
@@ -74,11 +75,27 @@ function CheckoutDeliveryPage() {
   )
 
   useEffect(() => {
+    startTaskTimer('complete_checkout')
+  }, [])
+
+  useEffect(() => {
     if (isPlacingOrder.current) return
     if (app.basketItems.length === 0) navigate('/basket')
   }, [app.basketItems.length, navigate])
 
   useEffect(() => {
+    if (app.isStudySession) {
+      setFullName(STUDY_CHECKOUT_PREFILL.fullName)
+      setStreetAddress(STUDY_CHECKOUT_PREFILL.streetAddress)
+      setCity(STUDY_CHECKOUT_PREFILL.city)
+      setPostcode(STUDY_CHECKOUT_PREFILL.postcode)
+      setPhoneNumber(STUDY_CHECKOUT_PREFILL.phoneNumber)
+      setCardNumber(STUDY_CHECKOUT_PREFILL.cardNumber)
+      setCardExpiry(STUDY_CHECKOUT_PREFILL.cardExpiry)
+      setCardCvv(STUDY_CHECKOUT_PREFILL.cardCvv)
+      return
+    }
+
     if (!app.isLoggedIn || !app.customer?.id) {
       setFullName('')
       setStreetAddress('')
@@ -115,7 +132,7 @@ function CheckoutDeliveryPage() {
     setCity('')
     setPostcode('')
     setPhoneNumber('')
-  }, [app.isLoggedIn, app.customer?.id])
+  }, [app.isStudySession, app.isLoggedIn, app.customer?.id])
 
   async function handlePlaceOrder(event) {
     if (event?.preventDefault) event.preventDefault()

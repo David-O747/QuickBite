@@ -1,5 +1,4 @@
 import { useApp } from '../context/AppContext'
-import { useMicroInteractions } from '../context/MicroInteractionsContext'
 import { getStudyMeta, logCtaClick, markHoverStart, clearHoverStart } from '../tracking/trackingService'
 
 function CtaButton({
@@ -12,14 +11,13 @@ function CtaButton({
   form,
 }) {
   const app = useApp()
-  const miEnabled = useMicroInteractions()
 
   function handleMouseEnter() {
-    if (miEnabled) markHoverStart(ctaButtonId)
+    markHoverStart(ctaButtonId)
   }
 
   function handleMouseLeave() {
-    if (miEnabled) clearHoverStart(ctaButtonId)
+    clearHoverStart(ctaButtonId)
   }
 
   function handleClick(event) {

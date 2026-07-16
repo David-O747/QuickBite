@@ -187,6 +187,7 @@ function BasketPage() {
                 </p>
               </div>
 
+              {!app.isStudySession && (
               <div className="rounded-2xl border-2 border-dashed border-gray-200 p-4">
                 <div className="flex items-center gap-2">
                   <input
@@ -208,6 +209,7 @@ function BasketPage() {
                   <p className="text-xs text-gray-500 mt-2">{promoMessage}</p>
                 )}
               </div>
+              )}
             </aside>
           </div>
         )}

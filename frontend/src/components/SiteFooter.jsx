@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useApp } from '../context/AppContext'
 
 const footerLinks = {
   Categories: [
@@ -22,6 +23,9 @@ const footerLinks = {
 }
 
 function SiteFooter() {
+  const { isStudySession } = useApp()
+  if (isStudySession) return null
+
   return (
     <footer className="bg-gray-50 mt-8 border-t border-gray-100">
       <div className="max-w-6xl mx-auto px-4 py-10 grid sm:grid-cols-2 md:grid-cols-4 gap-8 text-sm">

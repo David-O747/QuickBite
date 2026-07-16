@@ -17,7 +17,7 @@ function FormField({
   const [errorMessage, setErrorMessage] = useState('')
 
   const showValidation = touched || submitAttempted
-  const isInvalid = showValidation && Boolean(errorMessage)
+  const isInvalid = miEnabled && showValidation && Boolean(errorMessage)
   const isValid = miEnabled && touched && !errorMessage && fieldValue
 
   useEffect(() => {

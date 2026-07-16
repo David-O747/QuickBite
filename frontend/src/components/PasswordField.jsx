@@ -20,8 +20,8 @@ function PasswordField({
 
   const showValidation = touched || submitAttempted
   const isEmpty = !fieldValue
-  const showRequiredError = showValidation && isEmpty
-  const showStrengthError = showValidation && !isEmpty && !isStrong && showStrength
+  const showRequiredError = miEnabled && showValidation && isEmpty
+  const showStrengthError = miEnabled && showValidation && !isEmpty && !isStrong && showStrength
 
   function handleBlur() {
     setIsFocused(false)
