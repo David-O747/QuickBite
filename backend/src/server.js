@@ -46,14 +46,40 @@ function toCustomerResponse(record) {
 }
 
 function authSetupError() {
-  return 'Account database is not set up.'
+  return 'Account database is not set up. In Supabase SQL Editor, run supabase/setup_all.sql, then confirm the customers table exists.'
 }
 
 function isMissingCustomersTable(error) {
+  const message = String(error?.message || '')
+  const code = String(error?.code || '')
   return (
-    error?.code === 'PGRST205' ||
-    String(error?.message || '').includes("Could not find the table 'public.customers'")
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    message.includes("Could not find the table 'public.customers'") ||
+    message.includes('relation "public.customers" does not exist') ||
+    message.toLowerCase().includes('could not find the table')
   )
+}
+
+function isPermissionDenied(error) {
+  const message = String(error?.message || '').toLowerCase()
+  const code = String(error?.code || '')
+  return (
+    code === '42501' ||
+    message.includes('permission denied') ||
+    message.includes('row-level security') ||
+    message.includes('rls')
+  )
+}
+
+function describeAuthDbError(error, fallback) {
+  if (!error) return fallback
+  if (isMissingCustomersTable(error)) return authSetupError()
+  if (isPermissionDenied(error)) {
+    return 'Database permission denied. On Render, SUPABASE_SERVICE_ROLE_KEY must be the service_role secret key (not the anon key).'
+  }
+  const detail = [error.code, error.message].filter(Boolean).join(': ')
+  return detail ? `${fallback} (${detail})` : fallback
 }
 
 app.post('/api/auth/register', async (req, res) => {
@@ -117,10 +143,8 @@ app.post('/api/auth/register', async (req, res) => {
       .single()
 
     if (error || !customer) {
-      if (error && isMissingCustomersTable(error)) {
-        return res.status(500).json({ error: authSetupError() })
-      }
-      return res.status(500).json({ error: 'Could not create account' })
+      console.error('register customers insert failed', error)
+      return res.status(500).json({ error: describeAuthDbError(error, 'Could not create account') })
     }
 
     await supabase.from('customer_profiles').insert({ customer_id: customer.id })
@@ -155,10 +179,8 @@ app.post('/api/auth/login', async (req, res) => {
       .maybeSingle()
 
     if (error) {
-      if (isMissingCustomersTable(error)) {
-        return res.status(500).json({ error: authSetupError() })
-      }
-      return res.status(500).json({ error: 'Could not verify account' })
+      console.error('login customers select failed', error)
+      return res.status(500).json({ error: describeAuthDbError(error, 'Could not verify account') })
     }
 
     if (!customer) {
@@ -536,11 +558,27 @@ function queueStatusTransitions(orderRecord) {
   transitionTimers.set(orderRecord.id, timers)
 }
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  let customersTable = 'not_configured'
+  let customersError = null
+
+  if (supabase) {
+    const { error } = await supabase.from('customers').select('id').limit(1)
+    if (error) {
+      customersTable = 'error'
+      customersError = describeAuthDbError(error, error.message || 'unknown error')
+      console.error('health customers check failed', error)
+    } else {
+      customersTable = 'ok'
+    }
+  }
+
   res.json({
     status: 'ok',
     message: 'QuickBite API is running',
     supabase: Boolean(supabase),
+    customersTable,
+    customersError,
     timestamp: new Date().toISOString(),
   })
 })
