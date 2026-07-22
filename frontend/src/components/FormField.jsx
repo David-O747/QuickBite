@@ -53,13 +53,19 @@ function FormField({
       </label>
       <input
         id={fieldId}
+        name={fieldId}
         type={inputType}
         inputMode={inputMode}
         value={fieldValue}
         onChange={(e) => handleChange(e.target.value)}
         onBlur={handleBlur}
         placeholder={placeholder}
-        autoComplete={autoComplete}
+        autoComplete={autoComplete || 'off'}
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        data-1p-ignore={autoComplete === 'off' ? 'true' : undefined}
+        data-lpignore={autoComplete === 'off' ? 'true' : undefined}
         aria-invalid={isInvalid}
         aria-describedby={isInvalid ? `${fieldId}_error` : undefined}
         className={fieldClass}
