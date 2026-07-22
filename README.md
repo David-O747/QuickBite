@@ -2,6 +2,24 @@
 
 QuickBite is a food-ordering web app built for a usability study comparing two site versions. Participants browse restaurants, build a basket, check out, and track their order. Version **B** includes micro-interactions; version **A** is the same layout and flow without those effects.
 
+## Live study links
+
+| Version | Micro-interactions | Live URL |
+|---------|--------------------|----------|
+| **B** | On | https://quickestbites.netlify.app |
+| **A** | Off | https://quickbites2.netlify.app |
+
+**API (Render):** https://quickbite-35e2.onrender.com
+
+Participant example links:
+
+```
+https://quickestbites.netlify.app/?participant_id=P001&age_group=65-74
+https://quickbites2.netlify.app/?participant_id=P001&age_group=65-74
+```
+
+Replace `P001` and `65-74` per session. If the API has been idle, open https://quickbite-35e2.onrender.com/api/health first and wait for `"status":"ok"`.
+
 ## Stack
 
 - **Frontend:** React, Vite, Tailwind CSS
@@ -90,7 +108,16 @@ Rebuild or restart the dev server after changing this value.
 
 ## Participant link
 
-Send participants a URL with their ID and age group:
+Send participants a URL with their ID and age group.
+
+**Live (preferred for the study):**
+
+```
+https://quickestbites.netlify.app/?participant_id=P001&age_group=65-74
+https://quickbites2.netlify.app/?participant_id=P001&age_group=65-74
+```
+
+**Local development:**
 
 ```
 http://localhost:5173/?participant_id=P001&age_group=65-74
