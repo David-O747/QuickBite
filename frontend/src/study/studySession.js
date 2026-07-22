@@ -7,9 +7,6 @@ export const STUDY_CHECKOUT_PREFILL = {
   city: 'London',
   postcode: 'SW1A 2AA',
   phoneNumber: '07123456789',
-  cardNumber: '4242 4242 4242 4242',
-  cardExpiry: '12/28',
-  cardCvv: '123',
 }
 
 export function readStudyParams() {

@@ -90,9 +90,9 @@ function CheckoutDeliveryPage() {
       setCity(STUDY_CHECKOUT_PREFILL.city)
       setPostcode(STUDY_CHECKOUT_PREFILL.postcode)
       setPhoneNumber(STUDY_CHECKOUT_PREFILL.phoneNumber)
-      setCardNumber(STUDY_CHECKOUT_PREFILL.cardNumber)
-      setCardExpiry(STUDY_CHECKOUT_PREFILL.cardExpiry)
-      setCardCvv(STUDY_CHECKOUT_PREFILL.cardCvv)
+      setCardNumber('')
+      setCardExpiry('')
+      setCardCvv('')
       return
     }
 
@@ -244,7 +244,7 @@ function CheckoutDeliveryPage() {
         ) : (
           <div className="grid lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-6">
-              <form id={FORM_ID} onSubmit={handlePlaceOrder} noValidate>
+              <form id={FORM_ID} onSubmit={handlePlaceOrder} noValidate autoComplete="off">
                 <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                   <div className="flex items-center gap-2 mb-5">
                     <TruckIcon />
@@ -324,7 +324,7 @@ function CheckoutDeliveryPage() {
                     onChange={setCardNumber}
                     validateFn={validateCardNumber}
                     placeholder="Card number"
-                    autoComplete="new-password"
+                    autoComplete="off"
                     submitAttempted={submitAttempted}
                   />
 
@@ -336,7 +336,7 @@ function CheckoutDeliveryPage() {
                       onChange={setCardExpiry}
                       validateFn={validateExpiry}
                       placeholder="MM/YY"
-                      autoComplete="new-password"
+                      autoComplete="off"
                       submitAttempted={submitAttempted}
                     />
                     <FormField
@@ -346,7 +346,7 @@ function CheckoutDeliveryPage() {
                       onChange={setCardCvv}
                       validateFn={validateCvv}
                       placeholder="123"
-                      autoComplete="new-password"
+                      autoComplete="off"
                       submitAttempted={submitAttempted}
                     />
                   </div>
