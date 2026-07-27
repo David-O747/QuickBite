@@ -23,7 +23,6 @@ import {
 } from '../utils/checkoutFees'
 import { endTaskTimer, getStudyMeta, startTaskTimer } from '../tracking/trackingService'
 import { createOrder } from '../api/orderApi'
-import { STUDY_CHECKOUT_PREFILL } from '../study/studySession'
 
 function TruckIcon() {
   return (
@@ -84,24 +83,16 @@ function CheckoutDeliveryPage() {
   }, [app.basketItems.length, navigate])
 
   useEffect(() => {
-    if (app.isStudySession) {
-      setFullName(STUDY_CHECKOUT_PREFILL.fullName)
-      setStreetAddress(STUDY_CHECKOUT_PREFILL.streetAddress)
-      setCity(STUDY_CHECKOUT_PREFILL.city)
-      setPostcode(STUDY_CHECKOUT_PREFILL.postcode)
-      setPhoneNumber(STUDY_CHECKOUT_PREFILL.phoneNumber)
-      setCardNumber('')
-      setCardExpiry('')
-      setCardCvv('')
-      return
-    }
-
-    if (!app.isLoggedIn || !app.customer?.id) {
+    // Study sessions always start with blank checkout fields (no prefill/autofill).
+    if (app.isStudySession || !app.isLoggedIn || !app.customer?.id) {
       setFullName('')
       setStreetAddress('')
       setCity('')
       setPostcode('')
       setPhoneNumber('')
+      setCardNumber('')
+      setCardExpiry('')
+      setCardCvv('')
       return
     }
 
@@ -260,7 +251,7 @@ function CheckoutDeliveryPage() {
                         onChange={setFullName}
                         validateFn={(v) => validateRequired(v, 'Full name')}
                         placeholder="e.g. Alex Johnson"
-                        autoComplete="name"
+                        autoComplete="off"
                         submitAttempted={submitAttempted}
                       />
                     </div>
@@ -272,7 +263,7 @@ function CheckoutDeliveryPage() {
                         onChange={setStreetAddress}
                         validateFn={(v) => validateRequired(v, 'Street address')}
                         placeholder="123 Main Street"
-                        autoComplete="street-address"
+                        autoComplete="off"
                         submitAttempted={submitAttempted}
                       />
                     </div>
@@ -283,7 +274,7 @@ function CheckoutDeliveryPage() {
                       onChange={setCity}
                       validateFn={(v) => validateRequired(v, 'City')}
                       placeholder="London"
-                      autoComplete="address-level2"
+                      autoComplete="off"
                       submitAttempted={submitAttempted}
                     />
                     <FormField
@@ -293,7 +284,7 @@ function CheckoutDeliveryPage() {
                       onChange={setPostcode}
                       validateFn={validatePostcode}
                       placeholder="SW1A 1AA"
-                      autoComplete="postal-code"
+                      autoComplete="off"
                       submitAttempted={submitAttempted}
                     />
                     <div className="sm:col-span-2">
@@ -304,7 +295,7 @@ function CheckoutDeliveryPage() {
                         onChange={setPhoneNumber}
                         validateFn={(v) => validateRequired(v, 'Phone number')}
                         placeholder="+44 7..."
-                        autoComplete="tel"
+                        autoComplete="off"
                         submitAttempted={submitAttempted}
                       />
                     </div>
