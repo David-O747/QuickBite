@@ -1,14 +1,6 @@
 const STUDY_PARTICIPANT_KEY = 'qb_study_participant'
 const STUDY_AGE_KEY = 'qb_study_age'
 
-export const STUDY_CHECKOUT_PREFILL = {
-  fullName: 'Alex Johnson',
-  streetAddress: '10 Downing Street',
-  city: 'London',
-  postcode: 'SW1A 2AA',
-  phoneNumber: '07123456789',
-}
-
 export function readStudyParams() {
   const params = new URLSearchParams(window.location.search)
   const urlParticipant = params.get('participant_id')
