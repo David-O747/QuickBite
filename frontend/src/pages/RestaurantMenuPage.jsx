@@ -13,7 +13,7 @@ import SiteFooter from '../components/SiteFooter'
 import CtaButton from '../components/CtaButton'
 import LoadingSpinner from '../components/LoadingSpinner'
 import RestaurantBasketPopup from '../components/RestaurantBasketPopup'
-import { endTaskTimer, getStudyMeta } from '../tracking/trackingService'
+import { endTaskTimer, getStudyMeta, startTaskTimer } from '../tracking/trackingService'
 import { POST_ADD_BASKET_REDIRECT_MS } from '../study/studyFlow'
 
 const menuSections = [
@@ -56,11 +56,14 @@ function RestaurantMenuPage() {
   )
 
   useEffect(() => {
-    endTaskTimer('locate_product', studyMeta)
+    if (app.isStudySession) {
+      endTaskTimer('locate_product', studyMeta)
+      startTaskTimer('add_to_basket')
+    }
     setIsLoading(true)
     const timer = setTimeout(() => setIsLoading(false), 250)
     return () => clearTimeout(timer)
-  }, [restaurantId, studyMeta])
+  }, [restaurantId, studyMeta, app.isStudySession])
 
   useEffect(() => {
     if (!restaurant) return
@@ -116,7 +119,9 @@ function RestaurantMenuPage() {
       return
     }
 
-    endTaskTimer('add_to_basket', getStudyMeta(app))
+    if (app.isStudySession) {
+      endTaskTimer('add_to_basket', getStudyMeta(app))
+    }
     showAddedFeedback(menuItem)
 
     window.setTimeout(() => {

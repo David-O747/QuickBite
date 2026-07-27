@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
@@ -14,6 +14,7 @@ import { loginAccount } from '../api/authApi'
 
 function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const app = useApp()
   const { loginCustomer } = app
 
@@ -46,7 +47,9 @@ function LoginPage() {
       })
       loginCustomer(data.customer)
       setShowSuccess(true)
-      setTimeout(() => navigate(getPostAuthPath(app.basketItemCount)), 1500)
+      setTimeout(() => {
+        navigate(`${getPostAuthPath(app.basketItemCount)}${location.search}`)
+      }, 1500)
     } catch (error) {
       setFormError(error.message || 'Could not sign in. Please try again.')
     } finally {

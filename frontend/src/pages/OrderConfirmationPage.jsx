@@ -7,7 +7,7 @@ import CtaButton from '../components/CtaButton'
 import CheckoutProgress from '../components/CheckoutProgress'
 import SuccessBanner from '../components/SuccessBanner'
 import PopupIcon from '../components/studyPopups/PopupIcon'
-import { getStudyMeta, logPostOrderFeedback } from '../tracking/trackingService'
+import { endTaskTimer, getStudyMeta, logPostOrderFeedback } from '../tracking/trackingService'
 import { createOrderHelpRequest, getOrderByTrackingId } from '../api/orderApi'
 import {
   getDeliveryProgressPercent,
@@ -183,6 +183,13 @@ function OrderConfirmationPage() {
   const [paymentClarityRating, setPaymentClarityRating] = useState(0)
   const [feedbackText, setFeedbackText] = useState('')
   const liveTrackRef = useRef(null)
+  const checkoutTimerEndedRef = useRef(false)
+
+  useEffect(() => {
+    if (!app.isStudySession || !lastOrder || checkoutTimerEndedRef.current) return
+    checkoutTimerEndedRef.current = true
+    endTaskTimer('complete_checkout', getStudyMeta(app))
+  }, [app, lastOrder])
 
   const [elapsedMs, setElapsedMs] = useState(0)
   useEffect(() => {

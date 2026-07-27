@@ -45,10 +45,12 @@ function HomePage() {
   const [heroVideoFailed, setHeroVideoFailed] = useState(false)
 
   useEffect(() => {
-    startTaskTimer('locate_product')
+    if (app.isStudySession) {
+      startTaskTimer('locate_product')
+    }
     const timer = setTimeout(() => setIsLoading(false), 200)
     return () => clearTimeout(timer)
-  }, [])
+  }, [app.isStudySession])
 
   useEffect(() => {
     if (!app.isLoggedIn) {

@@ -184,7 +184,7 @@ export function AppProvider({ children }) {
     localStorage.setItem('qb_cookie_preferences', JSON.stringify(preferences))
   }
 
-  const studyParams = useMemo(() => readStudyParams(), [])
+  const studyParams = readStudyParams()
   const isStudySession = checkStudySession(studyParams.participantId)
 
   function persistCustomer(savedCustomer) {

@@ -21,7 +21,6 @@ import {
   getStoredPromoCode,
   SERVICE_FEE,
 } from '../utils/checkoutFees'
-import { endTaskTimer, getStudyMeta, startTaskTimer } from '../tracking/trackingService'
 import { createOrder } from '../api/orderApi'
 
 function TruckIcon() {
@@ -72,10 +71,6 @@ function CheckoutDeliveryPage() {
     () => calculateOrderTotal(app.basketTotal, promoCode),
     [app.basketTotal, promoCode]
   )
-
-  useEffect(() => {
-    startTaskTimer('complete_checkout')
-  }, [])
 
   useEffect(() => {
     if (isPlacingOrder.current) return
@@ -200,7 +195,6 @@ function CheckoutDeliveryPage() {
         estimatedArrival: backendOrder.order?.estimated_arrival_label,
       })
 
-      endTaskTimer('complete_checkout', getStudyMeta(app))
       navigate('/order-confirmation')
     } catch {
       isPlacingOrder.current = false
