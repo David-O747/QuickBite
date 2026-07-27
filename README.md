@@ -127,15 +127,19 @@ Replace `P001` and `65-74` per session. If these are missing, the app still work
 
 ## Study tasks
 
-Three timed tasks are recorded in Supabase:
+Three timed tasks are recorded in Supabase (`study_task_events`):
 
 | Task | Name | When the timer starts | When it ends |
 |------|------|----------------------|--------------|
-| 1 | Locate a product | Home page loads | User opens a restaurant menu |
-| 2 | Add to basket | Researcher presses **Alt+Shift+2**, or first item is added | First item added to basket |
-| 3 | Complete checkout | Researcher presses **Alt+Shift+3**, or user reaches checkout | Order placed |
+| 1 | Locate a product | Home page loads (with `participant_id` in the URL) | Restaurant menu page loads |
+| 2 | Add to basket | Restaurant menu page loads | First item successfully added to basket |
+| 3 | Complete checkout | Basket page loads | Order confirmation page loads |
 
-**Alt+Shift+2** and **Alt+Shift+3** are for the researcher to mark when they give the verbal task instruction.
+Each task row stores: `participant_id`, `age_group`, `session_id`, `site_version` (`A` or `B`), `task_name`, `task_start_time`, `task_end_time`, `task_completion_time_ms` (number), and `created_at` (timestamp).
+
+CTA clicks and misclicks are stored in `study_cta_events` with `cta_button_id`, `hesitation_ms`, `is_misclick`, click coordinates, and the same participant/session/version fields.
+
+**Alt+Shift+2** and **Alt+Shift+3** only write verbal-start markers to `study_task_markers` (they do not restart the timers).
 
 ## Micro-interactions (version B only)
 

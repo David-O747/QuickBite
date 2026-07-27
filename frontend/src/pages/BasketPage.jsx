@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import SiteHeader from '../components/SiteHeader'
 import SiteFooter from '../components/SiteFooter'
 import CtaButton from '../components/CtaButton'
 import CheckoutProgress from '../components/CheckoutProgress'
+import { startTaskTimer } from '../tracking/trackingService'
 
 const DELIVERY_FEE = 2.99
 const SERVICE_FEE = 1.5
@@ -24,6 +25,12 @@ function BasketPage() {
   const [promoInput, setPromoInput] = useState('')
   const [appliedPromo, setAppliedPromo] = useState('')
   const [promoMessage, setPromoMessage] = useState('')
+
+  useEffect(() => {
+    if (app.isStudySession) {
+      startTaskTimer('complete_checkout')
+    }
+  }, [app.isStudySession])
 
   const promoDiscount = useMemo(() => {
     if (appliedPromo === 'WELCOME10' && app.basketTotal >= 30) return 10

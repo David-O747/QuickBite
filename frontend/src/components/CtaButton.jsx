@@ -20,6 +20,10 @@ function CtaButton({
     clearHoverStart(ctaButtonId)
   }
 
+  function handleTouchStart() {
+    markHoverStart(ctaButtonId)
+  }
+
   function handleClick(event) {
     logCtaClick(ctaButtonId, event, getStudyMeta(app))
     if (onClick) onClick(event)
@@ -34,6 +38,7 @@ function CtaButton({
       className={`mi-cta px-5 py-2.5 rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
       onClick={handleClick}
     >
       {children}
