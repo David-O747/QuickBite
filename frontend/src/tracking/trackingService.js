@@ -1,11 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
 import { readStudyParams } from '../study/studySession'
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-const supabase =
-  supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+import { trackStudyRow } from '../api/studyApi'
 
 const taskTimers = {
   locate_product: null,
@@ -25,7 +19,8 @@ function withSiteVersion(rowData) {
 }
 
 export function isSupabaseConfigured() {
-  return Boolean(supabase)
+  // Study events are saved through the Render API (works on both Netlify sites).
+  return Boolean(import.meta.env.VITE_API_URL)
 }
 
 export function getActiveTaskName() {
@@ -35,22 +30,23 @@ export function getActiveTaskName() {
 async function insertRow(tableName, rowData) {
   const payload = withSiteVersion(rowData)
 
-  if (!supabase) {
-    const stored = JSON.parse(localStorage.getItem('qb_tracking_log') || '[]')
-    stored.push({ tableName, ...payload, loggedAt: Date.now() })
-    localStorage.setItem('qb_tracking_log', JSON.stringify(stored))
-    console.warn(`[tracking] Supabase not configured; logged ${tableName} locally`, payload)
-    return { ok: false, local: true }
-  }
-
-  // supabase-js returns { error } and does not throw on insert failure
-  const { error } = await supabase.from(tableName).insert(payload)
-  if (error) {
+  try {
+    await trackStudyRow(tableName, payload)
+    return { ok: true }
+  } catch (error) {
     console.error(`[tracking] Failed to insert into ${tableName}`, error, payload)
+
+    // Keep a local backup so a failed network call is still recoverable.
+    try {
+      const stored = JSON.parse(localStorage.getItem('qb_tracking_log') || '[]')
+      stored.push({ tableName, ...payload, loggedAt: Date.now(), error: String(error?.message || error) })
+      localStorage.setItem('qb_tracking_log', JSON.stringify(stored))
+    } catch {
+      // ignore local backup failures
+    }
+
     return { ok: false, error }
   }
-
-  return { ok: true }
 }
 
 export function startTaskTimer(taskName) {
