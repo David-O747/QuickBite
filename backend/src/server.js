@@ -561,6 +561,8 @@ function queueStatusTransitions(orderRecord) {
 app.get('/api/health', async (req, res) => {
   let customersTable = 'not_configured'
   let customersError = null
+  let studyTable = 'not_configured'
+  let studyError = null
 
   if (supabase) {
     const { error } = await supabase.from('customers').select('id').limit(1)
@@ -571,6 +573,15 @@ app.get('/api/health', async (req, res) => {
     } else {
       customersTable = 'ok'
     }
+
+    const { error: studyCheckError } = await supabase.from('study_task_events').select('id').limit(1)
+    if (studyCheckError) {
+      studyTable = 'error'
+      studyError = studyCheckError.message || 'unknown error'
+      console.error('health study_task_events check failed', studyCheckError)
+    } else {
+      studyTable = 'ok'
+    }
   }
 
   res.json({
@@ -579,6 +590,8 @@ app.get('/api/health', async (req, res) => {
     supabase: Boolean(supabase),
     customersTable,
     customersError,
+    studyTable,
+    studyError,
     timestamp: new Date().toISOString(),
   })
 })
@@ -750,6 +763,52 @@ app.post('/api/orders/:trackingPublicId/help', async (req, res) => {
   })
 
   res.json({ success: true })
+})
+
+const STUDY_TABLES = new Set([
+  'study_task_events',
+  'study_cta_events',
+  'study_popup_events',
+  'study_post_order_feedback',
+  'study_task_markers',
+])
+
+app.post('/api/study/events', async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: 'Study database is not configured' })
+    }
+
+    const tableName = String(req.body?.tableName || '')
+    const rowData = req.body?.rowData
+
+    if (!STUDY_TABLES.has(tableName)) {
+      return res.status(400).json({ error: 'Invalid study table' })
+    }
+
+    if (!rowData || typeof rowData !== 'object' || Array.isArray(rowData)) {
+      return res.status(400).json({ error: 'rowData is required' })
+    }
+
+    const payload = { ...rowData }
+    if (!payload.site_version) {
+      payload.site_version = 'B'
+    }
+
+    const { error } = await supabase.from(tableName).insert(payload)
+    if (error) {
+      console.error(`[study] insert ${tableName} failed`, error, payload)
+      return res.status(500).json({
+        error: error.message || 'Could not save study event',
+        code: error.code || null,
+      })
+    }
+
+    res.status(201).json({ success: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Unexpected error saving study event' })
+  }
 })
 
 app.use((req, res) => {
