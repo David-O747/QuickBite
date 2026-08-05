@@ -16,7 +16,7 @@ import {
 } from '../utils/deliveryStage'
 
 const deliverySteps = ['Confirmed', 'Preparing', 'On the way', 'Delivered']
-const FEEDBACK_MODAL_DELAY_MS = 5000
+const DELIVERED_STAGE = 3
 
 function ScooterIcon() {
   return (
@@ -184,6 +184,7 @@ function OrderConfirmationPage() {
   const [feedbackText, setFeedbackText] = useState('')
   const liveTrackRef = useRef(null)
   const checkoutTimerEndedRef = useRef(false)
+  const feedbackOpenedRef = useRef(false)
 
   useEffect(() => {
     if (!app.isStudySession || !lastOrder || checkoutTimerEndedRef.current) return
@@ -216,18 +217,18 @@ function OrderConfirmationPage() {
     [deliveryStage]
   )
 
+  // Show UX questionnaire for every user as soon as the order reaches Delivered.
   useEffect(() => {
     if (!lastOrder) return
+    if (deliveryStage < DELIVERED_STAGE) return
+    if (feedbackOpenedRef.current) return
 
     const feedbackKey = `qb_feedback_done_${lastOrder.orderNumber}`
     if (sessionStorage.getItem(feedbackKey) === '1') return
 
-    const timer = window.setTimeout(() => {
-      setShowFeedbackModal(true)
-    }, FEEDBACK_MODAL_DELAY_MS)
-
-    return () => window.clearTimeout(timer)
-  }, [lastOrder])
+    feedbackOpenedRef.current = true
+    setShowFeedbackModal(true)
+  }, [lastOrder, deliveryStage])
 
   useEffect(() => {
     if (!lastOrder?.trackingPublicId) return
