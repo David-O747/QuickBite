@@ -9,6 +9,7 @@ import SuccessBanner from '../components/SuccessBanner'
 import PopupIcon from '../components/studyPopups/PopupIcon'
 import { endTaskTimer, getStudyMeta, logPostOrderFeedback } from '../tracking/trackingService'
 import { createOrderHelpRequest, getOrderByTrackingId } from '../api/orderApi'
+import { useMicroInteractions } from '../context/MicroInteractionsContext'
 import {
   getDeliveryProgressPercent,
   getDeliveryStage,
@@ -172,6 +173,7 @@ function FeedbackModal({
 
 function OrderConfirmationPage() {
   const app = useApp()
+  const miEnabled = useMicroInteractions()
   const { lastOrder, updateOrderInHistory } = app
   const navigate = useNavigate()
   const [showCheck] = useState(true)
@@ -411,14 +413,18 @@ function OrderConfirmationPage() {
               <div className="relative pt-2">
                 <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 rounded-full" />
                 <div
-                  className="absolute top-5 left-0 h-1 bg-red-600 rounded-full transition-all duration-1000 ease-out"
+                  className={`absolute top-5 left-0 h-1 bg-red-600 rounded-full ${
+                    miEnabled ? 'transition-all duration-1000 ease-out' : ''
+                  }`}
                   style={{ width: `${progressPercent}%` }}
                 />
                 <div className="relative flex justify-between">
                   {deliverySteps.map((step, index) => (
                     <div key={step} className="flex flex-col items-center w-1/4">
                       <div
-                        className={`w-3 h-3 rounded-full transition-all duration-700 ${
+                        className={`w-3 h-3 rounded-full ${
+                          miEnabled ? 'transition-all duration-700' : ''
+                        } ${
                           index <= deliveryStage ? 'bg-red-600 ring-4 ring-red-100' : 'bg-gray-300'
                         }`}
                       />
@@ -455,8 +461,10 @@ function OrderConfirmationPage() {
                   </div>
                 )}
                 <div
-                  className={`absolute top-1/2 -translate-y-full transition-all duration-1000 ease-in-out ${
-                    deliveryStage === 2 ? 'track-courier-pulse' : ''
+                  className={`absolute top-1/2 -translate-y-full ${
+                    miEnabled ? 'transition-all duration-1000 ease-in-out' : ''
+                  } ${
+                    miEnabled && deliveryStage === 2 ? 'track-courier-pulse' : ''
                   }`}
                   style={{ left: courierMapLeft }}
                 >
