@@ -86,6 +86,13 @@ body {
   background-color: var(--brand-primary);
 }
 
+/* Site A (mi-off): no motion — strip transitions/animations site-wide */
+.mi-off,
+.mi-off * {
+  transition: none !important;
+  animation: none !important;
+}
+
 .mi-spinner {
   width: 32px;
   height: 32px;
@@ -103,6 +110,12 @@ body {
 }
 
 .track-map-spinner {
+  /* static ring on Site A (mi-off); animated only on Site B */
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+}
+
+.mi-on .track-map-spinner {
   animation: mi-spin 0.8s linear infinite;
 }
 
@@ -111,7 +124,7 @@ body {
   50% { transform: scale(1.12); }
 }
 
-.track-courier-pulse .track-courier-dot {
+.mi-on .track-courier-pulse .track-courier-dot {
   animation: track-courier-bob 1.2s ease-in-out infinite;
 }
 
