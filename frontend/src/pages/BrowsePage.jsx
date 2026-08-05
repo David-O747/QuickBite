@@ -1,7 +1,14 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 
 function BrowsePage() {
-  return <Navigate to="/" replace />
+  const location = useLocation()
+  const params = new URLSearchParams(location.search)
+  const category = params.get('category')
+  const target = category
+    ? `/?category=${encodeURIComponent(category)}`
+    : '/'
+
+  return <Navigate to={target} replace />
 }
 
 export default BrowsePage

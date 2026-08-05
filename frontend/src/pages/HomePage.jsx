@@ -44,6 +44,11 @@ function HomePage() {
   const [showBasketPopup, setShowBasketPopup] = useState(false)
   const [heroVideoFailed, setHeroVideoFailed] = useState(false)
 
+  const validCategoryNames = useMemo(
+    () => new Set(foodCategories.map((category) => category.categoryName)),
+    []
+  )
+
   useEffect(() => {
     if (app.isStudySession) {
       startTaskTimer('locate_product')
@@ -61,6 +66,18 @@ function HomePage() {
       setHeroAddress(app.deliveryAddress)
     }
   }, [app.isLoggedIn, app.deliveryAddress])
+
+  // Apply category from footer / browse links (e.g. /?category=Burgers).
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category')
+    if (!categoryFromUrl) return
+    if (!validCategoryNames.has(categoryFromUrl)) return
+
+    setActiveCategory(categoryFromUrl)
+    setTimeout(() => {
+      restaurantSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
+  }, [searchParams, validCategoryNames])
 
   const searchNearbyRestaurants = useCallback(async (addressText) => {
     const query = addressText.trim()
@@ -109,7 +126,9 @@ function HomePage() {
     if (nearQuery) {
       setHeroAddress(nearQuery)
       searchNearbyRestaurants(nearQuery)
-      setSearchParams({}, { replace: true })
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('near')
+      setSearchParams(nextParams, { replace: true })
     }
   }, [searchParams, setSearchParams, searchNearbyRestaurants])
 
@@ -135,7 +154,14 @@ function HomePage() {
   }
 
   function handleCategoryPick(categoryName) {
-    setActiveCategory((current) => (current === categoryName ? null : categoryName))
+    setActiveCategory((current) => {
+      const nextCategory = current === categoryName ? null : categoryName
+      const nextParams = new URLSearchParams(searchParams)
+      if (nextCategory) nextParams.set('category', nextCategory)
+      else nextParams.delete('category')
+      setSearchParams(nextParams, { replace: true })
+      return nextCategory
+    })
     scrollToRestaurants()
   }
 

@@ -3,10 +3,10 @@ import { useApp } from '../context/AppContext'
 
 const footerLinks = {
   Categories: [
-    { label: 'Pizza Delivery', path: '/browse?category=Pizza' },
-    { label: 'Burgers & Fast Food', path: '/browse?category=Burgers' },
-    { label: 'Healthy & Salads', path: '/browse?category=Salads' },
-    { label: 'Desserts & Bakery', path: '/browse?category=Desserts' },
+    { label: 'Pizza Delivery', path: '/?category=Pizza' },
+    { label: 'Burgers & Fast Food', path: '/?category=Burgers' },
+    { label: 'Healthy & Salads', path: '/?category=Salads' },
+    { label: 'Desserts & Bakery', path: '/?category=Desserts' },
   ],
   QuickBite: [
     { label: 'About Us', path: '/info/about-us' },
