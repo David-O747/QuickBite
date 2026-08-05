@@ -7,7 +7,6 @@ import { saveRestaurantToStorage, saveMenuReturnPath } from '../data/restaurantM
 import { hasBasketFromOtherRestaurant } from '../utils/basketRestaurantGuard'
 import RestaurantBasketPopup from './RestaurantBasketPopup'
 import CtaButton from './CtaButton'
-import { isBasketNavigationEnabled } from '../study/studyFlow'
 
 function LocationIcon() {
   return (
@@ -264,11 +263,8 @@ function SiteHeader({ pulseBasket = false, pageVariant = 'default' }) {
           <button
             type="button"
             className={`p-1 relative ${location.pathname === '/basket' ? 'ring-2 ring-red-600 rounded-full' : ''}`}
-            onClick={() => {
-              if (isBasketNavigationEnabled()) navigate('/basket')
-            }}
+            onClick={() => navigate('/basket')}
             aria-label="Basket"
-            data-no-misclick={!isBasketNavigationEnabled() ? true : undefined}
           >
             <BasketIcon />
             {basketItemCount > 0 && (
