@@ -221,12 +221,12 @@ function OrderConfirmationPage() {
   useEffect(() => {
     if (!lastOrder) return
     if (deliveryStage < DELIVERED_STAGE) return
-    if (feedbackOpenedRef.current) return
 
     const feedbackKey = `qb_feedback_done_${lastOrder.orderNumber}`
     if (sessionStorage.getItem(feedbackKey) === '1') return
+    if (feedbackOpenedRef.current === lastOrder.orderNumber) return
 
-    feedbackOpenedRef.current = true
+    feedbackOpenedRef.current = lastOrder.orderNumber
     setShowFeedbackModal(true)
   }, [lastOrder, deliveryStage])
 
