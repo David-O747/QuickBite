@@ -2,23 +2,43 @@
 
 QuickBite is a food-ordering web app built for a usability study comparing two site versions. Participants browse restaurants, build a basket, check out, and track their order. Version **B** includes micro-interactions; version **A** is the same layout and flow without those effects.
 
-## Live study links
+## Repository and live links
 
-| Version | Micro-interactions | Live URL |
-|---------|--------------------|----------|
-| **B** | On | https://quickestbites.netlify.app |
-| **A** | Off | https://quickbites2.netlify.app |
+| Resource | URL |
+|----------|-----|
+| **GitHub** | https://github.com/David-O747/QuickBite |
+| **Version B** (micro-interactions on) | https://quickestbites.netlify.app |
+| **Version A** (micro-interactions off) | https://quickbites2.netlify.app |
+| **API (Render)** | https://quickbite-35e2.onrender.com |
 
-**API (Render):** https://quickbite-35e2.onrender.com
+## Live study / testing links
 
-Participant example links:
+Use these URL formats during testing. Replace the participant ID and age group for each session.
+
+**Age groups used in the study:** `18-25` and `65+`
+
+### Version B — https://quickestbites.netlify.app
 
 ```
-https://quickestbites.netlify.app/?participant_id=P001&age_group=65-74
-https://quickbites2.netlify.app/?participant_id=P001&age_group=65-74
+https://quickestbites.netlify.app/?participant_id=P001&age_group=65+
+https://quickestbites.netlify.app/?participant_id=P016&age_group=18-25
 ```
 
-Replace `P001` and `65-74` per session. If the API has been idle, open https://quickbite-35e2.onrender.com/api/health first and wait for `"status":"ok"`.
+### Version A — https://quickbites2.netlify.app
+
+```
+https://quickbites2.netlify.app/?participant_id=P011&age_group=65+
+https://quickbites2.netlify.app/?participant_id=P006&age_group=18-25
+```
+
+### General template
+
+```
+https://quickestbites.netlify.app/?participant_id=P00X&age_group=18-25
+https://quickbites2.netlify.app/?participant_id=P00X&age_group=65+
+```
+
+If the API has been idle, open https://quickbite-35e2.onrender.com/api/health first and wait for `"status":"ok"`.
 
 ## Stack
 
@@ -50,7 +70,7 @@ PORT=3000
 NODE_ENV=development
 FRONTEND_ORIGIN=http://127.0.0.1:5173,http://localhost:5173
 SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 Optional (email/SMS notifications; without these, messages are logged only):
@@ -97,7 +117,7 @@ Opens on `http://localhost:5173`.
 
 ## Site versions
 
-Set `VITE_SITE_VERSION` in `frontend/.env`:
+Set `VITE_SITE_VERSION` in `frontend/.env` (and on each Netlify site):
 
 | Value | Behaviour |
 |-------|-----------|
@@ -110,20 +130,15 @@ Rebuild or restart the dev server after changing this value.
 
 Send participants a URL with their ID and age group.
 
-**Live (preferred for the study):**
-
-```
-https://quickestbites.netlify.app/?participant_id=P001&age_group=65-74
-https://quickbites2.netlify.app/?participant_id=P001&age_group=65-74
-```
+**Live (preferred for the study):** see [Live study / testing links](#live-study--testing-links) above.
 
 **Local development:**
 
 ```
-http://localhost:5173/?participant_id=P001&age_group=65-74
+http://localhost:5173/?participant_id=P001&age_group=65+
 ```
 
-Replace `P001` and `65-74` per session. If these are missing, the app still works but logs the participant as `anonymous`.
+If `participant_id` is missing, the app still works but logs the participant as `anonymous`.
 
 ## Study tasks
 
@@ -157,8 +172,7 @@ On version A, content and buttons behave the same but without the animations and
 | 8 | Basket count pulse in the header | After adding an item from a restaurant menu |
 | 9 | “Item added to your basket” fade-in | Restaurant menu, under the add button |
 | 10 | Order confirmed check icon fade-in | Order confirmation page |
-
-Courier map pulse on the “On the way” step runs on both versions.
+| 11 | Delivery map spinner / courier pulse | Order confirmation live track (version B only) |
 
 ## Main features
 
@@ -187,7 +201,7 @@ Courier map pulse on the “On the way” step runs on both versions.
 
 **Order confirmation**
 - Delivery timeline (Confirmed → Preparing → On the way → Delivered) with timed stages
-- Post-order feedback popup appears 5 seconds after placing an order (star ratings + optional text)
+- Post-order feedback questionnaire when the order reaches Delivered
 - Live track view and help options
 
 **Auth**
@@ -211,15 +225,19 @@ Courier map pulse on the “On the way” step runs on both versions.
 ## Deployment
 
 - **Frontend:** Netlify (`netlify.toml` — build from `frontend/`, publish `dist/`)
+  - Version A: https://quickbites2.netlify.app
+  - Version B: https://quickestbites.netlify.app
 - **Backend:** Render (`render.yaml` — Node service in `backend/`)
+- **Source:** https://github.com/David-O747/QuickBite
 
-Set the same environment variables on each host. Point `VITE_API_URL` at the live API URL and add that origin to `FRONTEND_ORIGIN` on the backend.
+Set the same environment variables on each host. Point `VITE_API_URL` at the live API URL and add both Netlify origins to `FRONTEND_ORIGIN` on the backend.
 
 ## Project structure
 
 ```
-backend/          Express API (auth, orders, profile, support)
+backend/          Express API (auth, orders, profile, support, study events)
 frontend/         React app
+exports/          Cleaned study data and analysis workbooks
 supabase/         setup_all.sql — full database schema
 netlify.toml      Frontend hosting config
 render.yaml       Backend hosting config
